@@ -25,13 +25,8 @@ public class Main {
     private static final String USAGE =
         "Usage:\n"
 
-        + "  ion-java-benchmark write [--profile] [--limit <int>] [--mode <mode>] [--time-unit <unit>] "
-            + "[--warmups <int>] [--iterations <int>] [--forks <int>] [--results-format <type>] "
-            + "[--results-file <file>] [--io-type <type>]... [--io-buffer-size <int>]... [--format <type>]... "
-            + "[--api <api>]... [--ion-imports-for-input <file>] [--ion-imports-for-benchmark <file>]... "
-            + "[--ion-flush-period <int>]... [--ion-length-preallocation <int>]... [--ion-float-width <int>]... "
-            + "[--ion-use-symbol-tokens <bool>]... [--ion-writer-block-size <int>]... "
-            + "[--json-use-big-decimals <bool>]... <input_file>\n"
+        + "  ion-java-benchmark write asaaaaaaaaaa "
+
 
         + "  ion-java-benchmark read [--profile] [--limit <int>] [--mode <mode>] [--time-unit <unit>] "
             + "[--warmups <int>] [--iterations <int>] [--forks <int>] [--results-format <type>] "
@@ -41,6 +36,8 @@ public class Main {
             + "[--ion-use-symbol-tokens <bool>]... [--paths <file>] "
             + "[--ion-use-lob-chunks <bool>]... [--ion-use-big-decimals <bool>]..."
             + "[--json-use-big-decimals <bool>]... <input_file>\n"
+
+        + "  ion-java-benchmark generate [--limit <int>]"
 
         + "  ion-java-benchmark --help\n"
 
