@@ -2,7 +2,6 @@ package com.amazon.ion.benchmark;
 
 import org.docopt.Docopt;
 
-import java.beans.beancontext.BeanContextServicesListener;
 import java.util.Map;
 
 public class Main {
@@ -43,7 +42,10 @@ public class Main {
             + "[--ion-use-lob-chunks <bool>]... [--ion-use-big-decimals <bool>]..."
             + "[--json-use-big-decimals <bool>]... <input_file>\n"
         
-        + "  ion-java-benchmark generate <size> <type> <file>\n" // generate command 
+        + "  ion-java-benchmark generate <data_size> <data_type> <output_file> [--format <type>] "
+            + "[--decimal-exponent-range <exp_range>] [--decimal-coefficient-digit-range <val_range>] "
+            + "[—text-code-point-range <range>] [—timestamp-precision <list>]\n"
+        
         + "  ion-java-benchmark --help\n"
 
         + "  ion-java-benchmark --version\n\n";
@@ -68,7 +70,9 @@ public class Main {
             + "DOM loader is included in each timed benchmark invocation. Therefore, it is important to provide "
             + "data that closely matches the size of data read by a single reader/loader instance in the real "
             + "world to ensure the initialization cost is properly amortized.\n"
-        + " generate\n"///
+        
+        + " generate\n"//TBD
+        
         + "\n";
 
     private static final String OPTIONS =
@@ -224,6 +228,12 @@ public class Main {
             + "stream (whichever is smaller). To avoid resizing, this value should be larger than the largest "
             + "top-level value in the Ion stream. Ignored unless --format ion_binary and --ion-reader incremental are "
             + "specified. May be specified multiple times to compare different settings.\n"
+        
+        // 'generate' options:TBD
+        
+        + "  -E --decimal-exponent-range <exp_range>      [default: -38,0]\n" 
+        
+        + "  -C --decimal-coefficient-digit-range <val_range>      [default: 1,9]\n"
 
         + "\n";
 
@@ -316,17 +326,12 @@ public class Main {
         if (optionsMap.get("--help").equals(true)) {
             printHelpAndExit();
         }
-       
         try {
         	 if (optionsMap.get("generate").equals(true)) {
-        		 try {
-        				WriteRandomIonValues.writeRandomDecimals(Integer.valueOf(optionsMap.get("<size>").toString()),optionsMap.get("<file>").toString());
-        			} catch (Exception e) {
-        				e.printStackTrace();
-        			}
+        		 GeneratorOptions.excuteGenerator(optionsMap);	
         	 }else {
-        		 OptionsMatrixBase options = OptionsMatrixBase.from(optionsMap);
-               options.executeBenchmark();
+        	     OptionsMatrixBase options = OptionsMatrixBase.from(optionsMap);
+        	     options.executeBenchmark();
 			}
         } catch (Exception e) {
             System.err.println(e.getMessage());

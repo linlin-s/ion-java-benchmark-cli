@@ -24,6 +24,7 @@ import com.amazon.ion.IonWriter;
 import com.amazon.ion.Timestamp;
 import com.amazon.ion.system.IonBinaryWriterBuilder;
 import com.amazon.ion.system.IonReaderBuilder;
+import com.amazon.ion.system.IonTextWriterBuilder;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -41,6 +42,15 @@ import java.util.List;
 import java.util.Random;
 
 class WriteRandomIonValues {
+    
+    // This method helps specify which writer should be used based on the format option [ion_binary/ion_text]
+    private static IonWriter formatWriter(String format, OutputStream out) {
+        IonWriter writer_text = IonBinaryWriterBuilder.standard().build(out);
+        if (format.equals("ion_text")) {
+           writer_text = IonTextWriterBuilder.standard().build(out);
+        }
+        return writer_text;
+    }
 
     private static void writeRandomStrings() throws Exception {
         File file = new File("randomStrings.10n");
@@ -78,36 +88,43 @@ class WriteRandomIonValues {
         System.out.println("Done. Size: " + file.length());
     }
 
-    public static void writeRandomDecimals(int size, String file_name) throws Exception {
-        File file = new File(file_name);
+    public static void writeRandomDecimals(int size, String path, String format, String exp_range, String coeffi_digit) throws Exception {
+        String file_name = path.substring(path.lastIndexOf("/")+1);   
+        String [] exp_str = exp_range.split(",");
+        String [] coeffi = coeffi_digit.split(",");
+        
+        File file = new File(path);
+        
+        int exp_min = Integer.parseInt(exp_str[0]);
+        int exp_max = Integer.parseInt(exp_str[1]);
+        int min = Integer.parseInt(coeffi[0]);
+        int max = Integer.parseInt(coeffi[1]);
+                
         try (
             OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().build(out)
+                IonWriter writer =WriteRandomIonValues.formatWriter(format, out);   
         ) {
             Random random = new Random();
-            // Target about 100MB of data. Decimals will average around 8 bytes, and we're writing 3 per iteration.
-            for (int i = 0; i < (size / 8 / 3); i++) {
-                int randomScale = random.nextInt(2048);
-                randomScale -= 1024;
-                writer.writeDecimal(BigDecimal.valueOf(random.nextDouble()).scaleByPowerOfTen(randomScale));
-                writer.writeDecimal(BigDecimal.valueOf(random.nextInt()));
-                writer.writeDecimal(BigDecimal.valueOf(random.nextFloat()).scaleByPowerOfTen(randomScale));
+            for (int i = 0; i < (size / 8 ); i++) {
+                int exp = random.nextInt((exp_max-exp_min)+1)+exp_min;
+                int rand_digits = random.nextInt((max - min) + 1) + min;
+                
+                StringBuilder rs = new StringBuilder();
+                
+                for (int digit = 0; digit < rand_digits; digit++) {
+                    rs.append(random.nextInt(10));
+                    }
+                BigDecimal coefficient = new BigDecimal(rs.toString());
+                writer.writeDecimal(coefficient.scaleByPowerOfTen(exp));
+            }
+            System.out.println(file_name+" generated successfully ! ");
+          
+            if (file_name.equals(path)) {
+                System.out.println("Generated data is under the current directory");
+            } else { 
+              System.out.println("File path: "+ path);
             }
         }
-        System.out.println("Finished writing decimals. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            int i = 0;
-            while (reader.next() != null) {
-                if (reader.getType() != IonType.DECIMAL) {
-                    throw new IllegalStateException("Found non-decimal");
-                }
-                Decimal value = reader.decimalValue();
-                if (i++ < 100) {
-                    System.out.println(value);
-                }
-            }
-        }
-        System.out.println("Done. Size: " + file.length());
     }
 
     private static void writeRandomInts() throws Exception {
@@ -387,8 +404,8 @@ class WriteRandomIonValues {
         }
         System.out.println("Done. Size: " + file.length());
     }
-//mark as an example
-     public static void writeRandomSymbolValues(int size,String file_name) throws IOException {
+    
+    public static void writeRandomSymbolValues(int size,String file_name) throws IOException {
         File file = new File(file_name);
         List<String> symbols = new ArrayList<>(500);
         Random random = new Random();
