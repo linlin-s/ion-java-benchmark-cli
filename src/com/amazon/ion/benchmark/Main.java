@@ -337,10 +337,10 @@ public class Main {
         try {
         	 if (optionsMap.get("generate").equals(true)) {
         	     GeneratorOptions.executeGenerator(optionsMap);
-        	 }else {
-        	     OptionsMatrixBase options = OptionsMatrixBase.from(optionsMap);
-        	     options.executeBenchmark();
-			}
+        	 } else {
+                 OptionsMatrixBase options = OptionsMatrixBase.from(optionsMap);
+                 options.executeBenchmark();
+             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

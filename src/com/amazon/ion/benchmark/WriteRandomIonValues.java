@@ -93,10 +93,9 @@ class WriteRandomIonValues {
                     int codePoint;
                     int type;
                     do {
-                        codePoint = random.nextInt(pointRange[1] - pointRange[0]+1) + pointRange[0];
+                        codePoint = random.nextInt(pointRange[1] - pointRange[0] + 1) + pointRange[0];
                         type = Character.getType(codePoint);
-                    } while (type == Character.PRIVATE_USE || type == Character.SURROGATE
-                            || type == Character.UNASSIGNED);
+                    } while (type == Character.PRIVATE_USE || type == Character.SURROGATE || type == Character.UNASSIGNED);
                     sb.appendCodePoint(codePoint);
                 }
                 writer.writeString(sb.toString());
@@ -236,8 +235,7 @@ class WriteRandomIonValues {
 
     private static Integer randomLocalOffset(Random random) {
         // Offsets are in minutes, [-23:59, 23:59], i.e. [-1439, 1439].
-        // The most common offset is Z (00:00), while unknown (-00:00) may also be
-        // common.
+        // The most common offset is Z (00:00), while unknown (-00:00) may also be common.
         Integer offsetMinutes = random.nextInt(6000) - 2000;
         if (offsetMinutes > 1439) {
             // This means about 43% of timestamps will have offset Z (UTC).
@@ -257,7 +255,7 @@ class WriteRandomIonValues {
                 coefficientStr.append(rand.nextInt(10));
             }
             BigDecimal fractional = new BigDecimal(coefficientStr.toString());
-            BigDecimal fractionalSecond = fractional.scaleByPowerOfTen(scale*(-1));
+            BigDecimal fractionalSecond = fractional.scaleByPowerOfTen(scale * (-1));
             return fractionalSecond.add(BigDecimal.valueOf(second));
         } else {
             return BigDecimal.valueOf(second);
@@ -268,8 +266,7 @@ class WriteRandomIonValues {
         String fileName = path.substring(path.lastIndexOf("/") + 1);
         File file = new File(path);
 
-        try (
-                OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
                 IonWriter writer = WriteRandomIonValues.formatWriter(format,out)) {
             // Target about 100MB of data. Timestamps will average around 7 bytes.
 //            Timestamp.Precision[] precisions = Timestamp.Precision.values();
@@ -477,7 +474,7 @@ class WriteRandomIonValues {
         File file = new File(path);
         List<String> symbols = new ArrayList<>(500);
         Random random = new Random();
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < 500; i++) {
             int length = random.nextInt(20);
             StringBuilder sb = new StringBuilder();
             for (int j = 0; j < length; j++) {

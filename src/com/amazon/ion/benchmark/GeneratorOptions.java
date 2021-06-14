@@ -2,9 +2,6 @@ package com.amazon.ion.benchmark;
 
 import java.util.Map;
 
-import com.amazon.ion.IonReader;
-import com.amazon.ion.system.IonReaderBuilder;
-
 public class GeneratorOptions {
         
     public static void executeGenerator(Map<String, Object> optionsMap) throws Exception {
