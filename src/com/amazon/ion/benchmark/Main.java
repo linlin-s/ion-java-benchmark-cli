@@ -42,9 +42,9 @@ public class Main {
             + "[--ion-use-lob-chunks <bool>]... [--ion-use-big-decimals <bool>]..."
             + "[--json-use-big-decimals <bool>]... <input_file>\n"
         
-        + "  ion-java-benchmark generate <data_size> <data_type> <output_file> [--format <type>] "
-            + "[--decimal-exponent-range <exp_range>] [--decimal-coefficient-digit-range <val_range>] "
-            + "[—text-code-point-range <range>] [—timestamp-precision <list>]\n"
+        + "  ion-java-benchmark generate (--data-size <data_size>) (--data-type <data_type>) "
+            + "[--format <type>] [--decimal-exponent-range <exp_range>] [--decimal-coefficient-digit-range <val_range>] "
+            + "[--timestamps-template <template>] [--text-code-point-range <range>] <output_file>\n"
         
         + "  ion-java-benchmark --help\n"
 
@@ -231,9 +231,17 @@ public class Main {
         
         // 'generate' options:TBD
         
-        + "  -E --decimal-exponent-range <exp_range>      [default: -38,0]\n" 
+        + "  -E --decimal-exponent-range <exp_range>      [default: [-32,0]]\n"
         
-        + "  -C --decimal-coefficient-digit-range <val_range>      [default: 1,9]\n"
+        + "  -C --decimal-coefficient-digit-range <val_range>      [default: [1,32]]\n"
+        
+        + "  -S --data-size <data_size>\n"
+        
+        + "  -T --data-type <data_type>\n"
+
+        + "  -M --timestamps-template <template>\n"
+
+        + "  -N --text-code-point-range <range>      [default: [0,1114111]]"
 
         + "\n";
 
@@ -328,7 +336,7 @@ public class Main {
         }
         try {
         	 if (optionsMap.get("generate").equals(true)) {
-        		 GeneratorOptions.excuteGenerator(optionsMap);	
+        	     GeneratorOptions.executeGenerator(optionsMap);
         	 }else {
         	     OptionsMatrixBase options = OptionsMatrixBase.from(optionsMap);
         	     options.executeBenchmark();

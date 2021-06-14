@@ -42,100 +42,130 @@ import java.util.List;
 import java.util.Random;
 
 class WriteRandomIonValues {
-    
-    // This method helps specify which writer should be used based on the format option [ion_binary/ion_text]
+
+    // This method helps specify which writer should be used based on the format
+    // option [ion_binary/ion_text]
     private static IonWriter formatWriter(String format, OutputStream out) {
-        IonWriter writer_text = IonBinaryWriterBuilder.standard().build(out);
-        if (format.equals("ion_text")) {
-           writer_text = IonTextWriterBuilder.standard().build(out);
+        IonWriter writer;
+        Format formatName = Format.valueOf(format.toUpperCase());
+        switch (formatName) {
+            case ION_BINARY:
+                writer = IonBinaryWriterBuilder.standard().build(out);
+                break;
+            case ION_TEXT:
+                writer = IonTextWriterBuilder.standard().build(out);
+                break;
+            default:
+                throw new IllegalStateException();
         }
-        return writer_text;
+        return writer;
+    }
+    // Use ion-java parser to parse provided range
+    private static int [] rangeParser(String range) {
+        IonReaderBuilder readerBuilder = IonReaderBuilder.standard();
+        IonReader reader = readerBuilder.build(range);
+        reader.next();                             
+        reader.stepIn(); 
+        reader.next();
+        int value1 = reader.intValue();
+        reader.next();
+        int value2 = reader.intValue();
+        int [] result = new int[] {value1,value2};
+        reader.stepOut();   
+        return result;
     }
 
-    private static void writeRandomStrings() throws Exception {
-        File file = new File("randomStrings.10n");
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().build(out)
-        ) {
+    public static void writeRandomStrings(int size, String path, String codePointRange, String format) throws Exception {
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
+        File file = new File(path);
+
+        int [] pointRange = WriteRandomIonValues.rangeParser(codePointRange);
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = WriteRandomIonValues.formatWriter(format, out)) {
             Random random = new Random();
-            // Target about 100MB of data. Strings will average around 20 bytes (2 bytes on average for each code point,
+            // Target about 100MB of data. Strings will average around 20 bytes (2 bytes on
+            // average for each code point,
             // average of 10 code points per string).
-            for (int i = 0; i < ( 1000000/ 20); i++) {
+            for (int i = 0; i < (size / 20); i++) {
                 int length = random.nextInt(20);
                 StringBuilder sb = new StringBuilder();
                 for (int j = 0; j < length; j++) {
                     int codePoint;
                     int type;
                     do {
-                        codePoint = random.nextInt(Character.MAX_CODE_POINT);
+                        codePoint = random.nextInt(pointRange[1] - pointRange[0]+1) + pointRange[0];
                         type = Character.getType(codePoint);
-                    } while (type == Character.PRIVATE_USE || type == Character.SURROGATE || type == Character.UNASSIGNED);
+                    } while (type == Character.PRIVATE_USE || type == Character.SURROGATE
+                            || type == Character.UNASSIGNED);
                     sb.appendCodePoint(codePoint);
                 }
                 writer.writeString(sb.toString());
             }
         }
-        System.out.println("Finished writing strings. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            while (reader.next() != null) {
-                if (reader.getType() != IonType.STRING) {
-                    throw new IllegalStateException("Found non-string");
-                }
-                reader.stringValue();
-            }
+        System.out.println(fileName + " generated successfully ! ");
+        if (fileName.equals(path)) {
+            System.out.println("Generated data is under the current directory");
+        } else {
+            System.out.println("File path: " + path);
         }
-        System.out.println("Done. Size: " + file.length());
     }
 
-    public static void writeRandomDecimals(int size, String path, String format, String exp_range, String coeffi_digit) throws Exception {
-        String file_name = path.substring(path.lastIndexOf("/")+1);   
-        String [] exp_str = exp_range.split(",");
-        String [] coeffi = coeffi_digit.split(",");
-        
+    public static void writeRandomDecimals(int size, String path, String format, String expRange, String coefficientDigit) throws Exception {
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
         File file = new File(path);
         
-        int exp_min = Integer.parseInt(exp_str[0]);
-        int exp_max = Integer.parseInt(exp_str[1]);
-        int min = Integer.parseInt(coeffi[0]);
-        int max = Integer.parseInt(coeffi[1]);
-                
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-                IonWriter writer =WriteRandomIonValues.formatWriter(format, out);   
-        ) {
+        int[] expValRange = WriteRandomIonValues.rangeParser(expRange);
+        int[] coefficientDigitRange = WriteRandomIonValues.rangeParser(coefficientDigit);
+
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = WriteRandomIonValues.formatWriter(format, out)) {
             Random random = new Random();
-            for (int i = 0; i < (size / 8 ); i++) {
-                int exp = random.nextInt((exp_max-exp_min)+1)+exp_min;
-                int rand_digits = random.nextInt((max - min) + 1) + min;
-                
+            while (size > 0) {
+                int exp = random.nextInt((expValRange[1] - expValRange[0]) + 1) + expValRange[0];
+                int randDigits = random.nextInt((coefficientDigitRange[1] - coefficientDigitRange[0]) + 1) + coefficientDigitRange[0];
+
                 StringBuilder rs = new StringBuilder();
-                
-                for (int digit = 0; digit < rand_digits; digit++) {
+
+                for (int digit = 0; digit < randDigits; digit++) {
                     rs.append(random.nextInt(10));
-                    }
+                }
                 BigDecimal coefficient = new BigDecimal(rs.toString());
                 writer.writeDecimal(coefficient.scaleByPowerOfTen(exp));
+                // Calculate the size of current decimal, 4 bytes can store 9 digits number, and the decimal point == 1 byte, totalDigits is the digit number of the whole decimal.
+                int totalDigits;
+                if (Math.abs(exp) > Math.abs(randDigits)){
+                    totalDigits = Math.abs(exp);
+                } else {
+                    totalDigits = Math.abs(randDigits);
+                }
+
+                int currentSize;
+                if (totalDigits % 2 == 0) {
+                    currentSize = (totalDigits + 3) / 2;
+                } else {
+                    currentSize = (totalDigits + 4) / 2;
+                }
+                size -= currentSize;
             }
-            System.out.println(file_name+" generated successfully ! ");
-          
-            if (file_name.equals(path)) {
+            System.out.println(fileName + " generated successfully ! ");
+            if (fileName.equals(path)) {
                 System.out.println("Generated data is under the current directory");
-            } else { 
-              System.out.println("File path: "+ path);
+            } else {
+                System.out.println("File path: " + path);
             }
         }
     }
 
-    private static void writeRandomInts() throws Exception {
-        File file = new File("randomInts.10n");
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().build(out)
-        ) {
+    public static void writeRandomInts(int size, String format, String path) throws Exception {
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
+        File file = new File(path);
+
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = WriteRandomIonValues.formatWriter(format, out)) {
             Random random = new Random();
-            // Target about 100MB of data. Ints will average around 8 bytes, and we're writing 4 per iteration.
-            for (int i = 0; i < (100_000_000 / 8 / 3); i++) {
+            // Target about 100MB of data. Ints will average around 8 bytes, and we're
+            // writing 4 per iteration.
+            for (int i = 0; i < (size / 8 / 3); i++) {
                 writer.writeInt(random.nextInt(1024));
                 writer.writeInt(random.nextInt());
                 long longValue = random.nextLong();
@@ -143,61 +173,44 @@ class WriteRandomIonValues {
                 writer.writeInt(BigInteger.valueOf(longValue).multiply(BigInteger.TEN));
             }
         }
-        System.out.println("Finished writing ints. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            int i = 0;
-            while (reader.next() != null) {
-                if (reader.getType() != IonType.INT) {
-                    throw new IllegalStateException("Found non-int");
-                }
-                Decimal value = reader.decimalValue();
-                if (i++ < 100) {
-                    System.out.println(value);
-                }
-            }
+        System.out.println(fileName + " generated successfully ! ");
+        if (fileName.equals(path)) {
+            System.out.println("Generated data is under the current directory");
+        } else {
+            System.out.println("File path: " + path);
         }
-        System.out.println("Done. Size: " + file.length());
     }
 
-    private static void writeRandomFloats() throws Exception {
-        File file = new File("randomFloats.10n");
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().withFloatBinary32Enabled().build(out)
-        ) {
+    public static void writeRandomFloats(int size, String format, String path) throws Exception {
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
+        File file = new File(path);
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = WriteRandomIonValues.formatWriter(format, out)) {
             Random random = new Random();
-            // Target about 100MB of data. Floats will average at 7 bytes, and we're writing 2 per iteration.
-            for (int i = 0; i < (100_000_000 / 7 / 2); i++) {
+            // Target about 100MB of data. Floats will average at 7 bytes, and we're writing
+            // 2 per iteration.
+            for (int i = 0; i < (size / 7 / 2); i++) {
                 writer.writeFloat(Double.longBitsToDouble(random.nextLong()));
                 writer.writeFloat(Float.intBitsToFloat(random.nextInt()));
             }
         }
-        System.out.println("Finished writing floats. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            int i = 0;
-            while (reader.next() != null) {
-                if (reader.getType() != IonType.FLOAT) {
-                    throw new IllegalStateException("Found non-float");
-                }
-                double value = reader.doubleValue();
-                if (i++ < 100) {
-                    System.out.println(value);
-                }
-            }
+        System.out.println(fileName + " generated successfully ! ");
+        if (fileName.equals(path)) {
+            System.out.println("Generated data is under the current directory");
+        } else {
+            System.out.println("File path: " + path);
         }
-        System.out.println("Done. Size: " + file.length());
     }
 
     private static void writeListOfRandomFloats() throws Exception {
         File file = new File("manyLargeListsOfRandomFloats.10n");
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().withFloatBinary32Enabled().build(out)
-        ) {
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = IonBinaryWriterBuilder.standard().withFloatBinary32Enabled().build(out)) {
             Random random = new Random();
             for (int j = 0; j < 100; j++) {
                 writer.stepIn(IonType.LIST);
-                // Target about 1MB of data. Floats will average at 7 bytes, and we're writing 2 per iteration.
+                // Target about 1MB of data. Floats will average at 7 bytes, and we're writing 2
+                // per iteration.
                 for (int i = 0; i < (1_000_000 / 7 / 2); i++) {
                     writer.writeFloat(Double.longBitsToDouble(random.nextLong()));
                     writer.writeFloat(Float.intBitsToFloat(random.nextInt()));
@@ -223,7 +236,8 @@ class WriteRandomIonValues {
 
     private static Integer randomLocalOffset(Random random) {
         // Offsets are in minutes, [-23:59, 23:59], i.e. [-1439, 1439].
-        // The most common offset is Z (00:00), while unknown (-00:00) may also be common.
+        // The most common offset is Z (00:00), while unknown (-00:00) may also be
+        // common.
         Integer offsetMinutes = random.nextInt(6000) - 2000;
         if (offsetMinutes > 1439) {
             // This means about 43% of timestamps will have offset Z (UTC).
@@ -235,122 +249,177 @@ class WriteRandomIonValues {
         return offsetMinutes;
     }
 
-    private static BigDecimal randomSecondWithFraction(Random random) {
-        int second = random.nextInt(60);
-        int fractional = Math.abs(random.nextInt(Integer.MAX_VALUE));
-        int numberOfDigits = (int) Math.ceil(Math.log10(fractional));
-        BigDecimal fractionalSecond = BigDecimal.valueOf(fractional, numberOfDigits);
-        return fractionalSecond.add(BigDecimal.valueOf(second));
+    private static BigDecimal randomSecondWithFraction(Random rand, int scale) {
+        int second = rand.nextInt(60);
+        if (scale != 0) {
+            StringBuilder coefficientStr = new StringBuilder();
+            for (int digit = 0; digit < scale; digit++) {
+                coefficientStr.append(rand.nextInt(10));
+            }
+            BigDecimal fractional = new BigDecimal(coefficientStr.toString());
+            BigDecimal fractionalSecond = fractional.scaleByPowerOfTen(scale*(-1));
+            return fractionalSecond.add(BigDecimal.valueOf(second));
+        } else {
+            return BigDecimal.valueOf(second);
+        }
     }
 
-    private static void writeRandomTimestamps() throws Exception {
-        File file = new File("randomTimestamps.10n");
+    public static void writeRandomTimestamps(int size, String path, String timestampTemplate, String format) throws Exception {
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
+        File file = new File(path);
+
         try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().build(out)
-        ) {
-            Random random = new Random();
+                OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = WriteRandomIonValues.formatWriter(format,out)) {
             // Target about 100MB of data. Timestamps will average around 7 bytes.
-            Timestamp.Precision[] precisions = Timestamp.Precision.values();
-            for (int i = 0; i < (100_000_000 / 7); i++) {
-                Timestamp.Precision precision = precisions[random.nextInt(precisions.length)];
-                Timestamp timestamp;
-                switch (precision) {
-                    case YEAR:
-                        timestamp = Timestamp.forYear(random.nextInt(9998) + 1);
-                        break;
-                    case MONTH:
-                        timestamp = Timestamp.forMonth(random.nextInt(9998) + 1, random.nextInt(12) + 1);
-                        break;
-                    case DAY:
-                        timestamp = Timestamp.forDay(
-                            random.nextInt(9998) + 1,
-                            random.nextInt(12) + 1,
-                            random.nextInt(28) + 1 // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
-                        );
-                        break;
-                    case MINUTE:
-                        timestamp = Timestamp.forMinute(
-                            random.nextInt(9998) + 1,
-                            random.nextInt(12) + 1,
-                            random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
-                            random.nextInt(24),
-                            random.nextInt(60),
-                            randomLocalOffset(random)
-                        );
-                        break;
-                    case SECOND:
-                        timestamp = Timestamp.forSecond(
-                            random.nextInt(9998) + 1,
-                            random.nextInt(12) + 1,
-                            random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
-                            random.nextInt(24),
-                            random.nextInt(60),
-                            random.nextInt(60),
-                            randomLocalOffset(random)
-                        );
-                        break;
-                    case FRACTION:
-                        timestamp = Timestamp.forSecond(
-                            random.nextInt(9998) + 1,
-                            random.nextInt(12) + 1,
-                            random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
-                            random.nextInt(24),
-                            random.nextInt(60),
-                            randomSecondWithFraction(random),
-                            randomLocalOffset(random)
-                        );
-                        break;
-                    default:
-                        throw new IllegalStateException();
+//            Timestamp.Precision[] precisions = Timestamp.Precision.values();
+            if (timestampTemplate != "random"){
+                while (size > 0) {
+                    IonReaderBuilder readerBuilder = IonReaderBuilder.standard();
+                    IonReader reader = readerBuilder.build(timestampTemplate);
+                    reader.next();
+                    reader.stepIn();
+                    reader.next();
+                    int count = 0;
+                    while (reader.isNullValue() == false){
+                        count += 1;
+                        Timestamp value = reader.timestampValue();
+                        Timestamp.Precision precision = value.getPrecision();
+                        Timestamp timestamp;
+                        Random random = new Random();
+
+                        switch (precision) {
+                            case YEAR:
+                                timestamp = Timestamp.forYear(random.nextInt(9998) + 1);
+                                break;
+                            case MONTH:
+                                timestamp = Timestamp.forMonth(random.nextInt(9998) + 1, random.nextInt(12) + 1);
+                                break;
+                            case DAY:
+                                timestamp = Timestamp.forDay(random.nextInt(9998) + 1, random.nextInt(12) + 1,
+                                        random.nextInt(28) + 1 // Use max 28 for simplicity. Not including up to 31 is not going to
+                                        // affect the measurement.
+                                );
+                                break;
+                            case MINUTE:
+                                timestamp = Timestamp.forMinute(random.nextInt(9998) + 1, random.nextInt(12) + 1,
+                                        random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to
+                                        // affect the measurement.
+                                        random.nextInt(24), random.nextInt(60), randomLocalOffset(random));
+                                break;
+                            case SECOND:
+                                //added
+                                BigDecimal secondValue = value.getDecimalSecond();
+                                int scale = secondValue.scale();
+                                timestamp = Timestamp.forSecond(random.nextInt(9998) + 1, random.nextInt(12) + 1,
+                                        random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to
+                                        // affect the measurement.
+                                        random.nextInt(24), random.nextInt(60), randomSecondWithFraction(random,scale), randomLocalOffset(random));
+                                break;
+                            default:
+                                throw new IllegalStateException();
+                        }
+                        writer.writeTimestamp(timestamp);
+                        if (reader.next() == null){
+                            break;
+                        }
+                    }
+                    int currentSize = 7 * count;
+                    size -= currentSize;
                 }
-                writer.writeTimestamp(timestamp);
+            } else {
+                Random random = new Random();
+                // Target about 100MB of data. Timestamps will average around 7 bytes.
+                Timestamp.Precision[] precisions = Timestamp.Precision.values();
+                for (int i = 0; i < (size / 7); i++) {
+                    Timestamp.Precision precision = precisions[random.nextInt(precisions.length)];
+                    Timestamp timestamp;
+                    int randomScale = random.nextInt(20);
+                    switch (precision) {
+                        case YEAR:
+                            timestamp = Timestamp.forYear(random.nextInt(9998) + 1);
+                            break;
+                        case MONTH:
+                            timestamp = Timestamp.forMonth(random.nextInt(9998) + 1, random.nextInt(12) + 1);
+                            break;
+                        case DAY:
+                            timestamp = Timestamp.forDay(
+                                    random.nextInt(9998) + 1,
+                                    random.nextInt(12) + 1,
+                                    random.nextInt(28) + 1 // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
+                            );
+                            break;
+                        case MINUTE:
+                            timestamp = Timestamp.forMinute(
+                                    random.nextInt(9998) + 1,
+                                    random.nextInt(12) + 1,
+                                    random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
+                                    random.nextInt(24),
+                                    random.nextInt(60),
+                                    randomLocalOffset(random)
+                            );
+                            break;
+                        case SECOND:
+                            timestamp = Timestamp.forSecond(
+                                    random.nextInt(9998) + 1,
+                                    random.nextInt(12) + 1,
+                                    random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
+                                    random.nextInt(24),
+                                    random.nextInt(60),
+                                    random.nextInt(60),
+                                    randomLocalOffset(random)
+                            );
+                            break;
+                        case FRACTION:
+                            timestamp = Timestamp.forSecond(
+                                    random.nextInt(9998) + 1,
+                                    random.nextInt(12) + 1,
+                                    random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
+                                    random.nextInt(24),
+                                    random.nextInt(60),
+                                    randomSecondWithFraction(random,randomScale),
+                                    randomLocalOffset(random)
+                            );
+                            break;
+                        default:
+                            throw new IllegalStateException();
+                    }
+                    writer.writeTimestamp(timestamp);
+                }
+            }
+            System.out.println(fileName + " generated successfully ! ");
+            if (fileName.equals(path)) {
+                System.out.println("Generated data is under the current directory");
+            } else {
+                System.out.println("File path: " + path);
             }
         }
-        System.out.println("Finished writing timestamps. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            int i = 0;
-            while (reader.next() != null) {
-                if (reader.getType() != IonType.TIMESTAMP) {
-                    throw new IllegalStateException("Found non-timestamp");
-                }
-                Timestamp value = reader.timestampValue();
-                if (i++ < 100) {
-                    System.out.println(value);
-                }
-            }
-        }
-        System.out.println("Done. Size: " + file.length());
     }
 
-    private static void writeRandomLobs(IonType type) throws IOException {
-        File file = new File("randomClobs.10n");
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().build(out)
-        ) {
+    public static void writeRandomLobs(int size, String type, String format, String path) throws IOException {
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
+        File file = new File(path);
+
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = WriteRandomIonValues.formatWriter(format, out)) {
             Random random = new Random();
             // Target about 100MB of data. Blobs will average around 259 bytes.
-            for (int i = 0; i < 100_000_000 / 259; i++) {
+            for (int i = 0; i < size / 259; i++) {
                 byte[] randomBytes = new byte[random.nextInt(512)];
                 random.nextBytes(randomBytes);
-                if (type == IonType.BLOB) {
+                if (type == "blob") {
                     writer.writeBlob(randomBytes);
                 } else {
                     writer.writeClob(randomBytes);
                 }
             }
         }
-        System.out.println("Finished writing lobs. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            while (reader.next() != null) {
-                if (reader.getType() != type) {
-                    throw new IllegalStateException("Found non-lob");
-                }
-                byte[] value = reader.newBytes();
-            }
+        System.out.println(fileName + " generated successfully ! ");
+        if (fileName.equals(path)) {
+            System.out.println("Generated data is under the current directory");
+        } else {
+            System.out.println("File path: " + path);
         }
-        System.out.println("Done. Size: " + file.length());
     }
 
     private static void writeRandomAnnotatedFloats() throws Exception {
@@ -371,10 +440,8 @@ class WriteRandomIonValues {
             }
             annotations.add(sb.toString());
         }
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().build(out)
-        ) {
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = IonBinaryWriterBuilder.standard().build(out)) {
             // Target about 100MB of data. Annotated floats will average around 14 bytes.
             for (int i = 0; i < (100_000_000 / 14); i++) {
                 // 60% of values will have 1 annotation; 40% will have 2 or 3.
@@ -404,12 +471,13 @@ class WriteRandomIonValues {
         }
         System.out.println("Done. Size: " + file.length());
     }
-    
-    public static void writeRandomSymbolValues(int size,String file_name) throws IOException {
-        File file = new File(file_name);
+
+    public static void writeRandomSymbolValues(int size, String format, String path) throws IOException {
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
+        File file = new File(path);
         List<String> symbols = new ArrayList<>(500);
         Random random = new Random();
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < size; i++) {
             int length = random.nextInt(20);
             StringBuilder sb = new StringBuilder();
             for (int j = 0; j < length; j++) {
@@ -423,28 +491,18 @@ class WriteRandomIonValues {
             }
             symbols.add(sb.toString());
         }
-        try (
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-            IonWriter writer = IonBinaryWriterBuilder.standard().build(out)
-        ) {
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                IonWriter writer = WriteRandomIonValues.formatWriter(format, out)) {
             // Target 100MB of data. Symbol values will average 2 bytes each.
-            for (int i = 0; i < size/ 2; i++) {
+            for (int i = 0; i < size / 2; i++) {
                 writer.writeSymbol(symbols.get(random.nextInt(500)));
             }
         }
-        System.out.println("Finished writing symbol values. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            int i = 0;
-            while (reader.next() != null) {
-                if (reader.getType() != IonType.SYMBOL) {
-                    throw new IllegalStateException("Found non-symbol");
-                }
-                String value = reader.stringValue();
-                if (i++ < 100) {
-                    System.out.println(value);
-                }
-            }
+        System.out.println(fileName + " generated successfully ! ");
+        if (fileName.equals(path)) {
+            System.out.println("Generated data is under the current directory");
+        } else {
+            System.out.println("File path: " + path);
         }
-        System.out.println("Done. Size: " + file.length());
     }
 }
