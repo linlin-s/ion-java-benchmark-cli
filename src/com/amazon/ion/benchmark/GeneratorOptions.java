@@ -20,7 +20,6 @@ public class GeneratorOptions {
         String range = optionsMap.get("--text-code-point-range").toString();
         String timestampTemplate;
 
-
         if (optionsMap.get("--timestamps-template") == null) {
             timestampTemplate = null;
         } else {
