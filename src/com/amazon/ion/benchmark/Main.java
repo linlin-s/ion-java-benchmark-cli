@@ -42,9 +42,9 @@ public class Main {
             + "[--ion-use-lob-chunks <bool>]... [--ion-use-big-decimals <bool>]..."
             + "[--json-use-big-decimals <bool>]... <input_file>\n"
         
-        + "  ion-java-benchmark generate (--data-size <data_size>) (--data-type <data_type>) "
+        + "  ion-java-benchmark generate (--data-size <data_size>) [--data-type <data_type>] "
             + "[--format <type>] [--decimal-exponent-range <exp_range>] [--decimal-coefficient-digit-range <val_range>] "
-            + "[--timestamps-template <template>] [--text-code-point-range <range>] [--input-Ion-Schema <file_path>] <output_file>\n"
+            + "[--timestamps-template <template>] [--text-code-point-range <range>] [--input-ion-Schema <file_path>] <output_file>\n"
         
         + "  ion-java-benchmark --help\n"
 
@@ -71,11 +71,11 @@ public class Main {
             + "data that closely matches the size of data read by a single reader/loader instance in the real "
             + "world to ensure the initialization cost is properly amortized.\n"
         
-        + " generate     Generate the random Ion data which can be used as input file during the read/write process. "
-            + "Data size, data type and the path of output file are required options. There are optional options provided "
-            + "by this tool. The specifications of three scalar types can be executed so far, decimal, string and timestamp. "
-            + "The size of generated data file in roughly equal to the expected size, and the difference between them is in a "
-            + "proper range.\n"
+        + " generate     Generate random Ion data which can be used as input to the read/write commands. "
+            + "Data size, data type and the path of output file are required options. The specifications of three "
+            + "scalar types can be executed so far, decimal, string and timestamp. "
+            + "The command will generate approximately the amount of data requested, but the actual size of the generated "
+            + "may be slightly larger or smaller than requested.\n"
         
         + "\n";
 
@@ -235,31 +235,32 @@ public class Main {
         
         // 'generate' options:
         
-        + "  -E --decimal-exponent-range <exp_range>      The exponent range of generated decimal, which only accept "
-            + "negative integers which is no less than -32. If this option is not provided, the range will be set to "
-            + "the default range. [default: [-32,0]]\n"
+        + "  -E --decimal-exponent-range <exp_range>      The exponent range of generated decimals, the value should be integer. "
+            + "If this option is not provided, the range will be set to the default range. [default: [-32,0]]\n"
         
-        + "  -C --decimal-coefficient-digit-range <val_range>      This range represents the number of digits of coefficient "
-            + "field of decimal. This option only take positive integer as valid value. If this option is not provided, "
+        + "  -C --decimal-coefficient-digit-range <val_range>      This range represents the number of digits in the "
+            + "decimal's coefficient. This option only take positive integer as valid value. If this option is not provided, "
             + "the range will be set to the default range. [default: [1,32]]\n"
         
-        + "  -S --data-size <data_size>      The size of output file is required when execute the 'generate' operation. "
-            + "The value provided is in bytes and cannot guarantee the generated file size is equal to the expected size. "
-            + "The generated file will have difference with the expected size within a proper range.\n"
+        + "  -S --data-size <data_size>      The requested size of the generated data. Required by the 'generate' command. "
+            + "The actual amount of data generated will be approximately equal to the requested value.\n"
         
-        + "  -T --data-type <data_type>      The type of data is required when execute the 'generate' operation. "
-            + "Scalar types which are available: Decimal, Integer, String, Timestamp, Clob/Blob, Float, Symbol.\n"
+        + "  -T --data-type <data_type>      The type of data to generate. Required by the 'generate' command."
+            + "Scalar types are from this set (decimal | int | string | timestamp | clob | blob | float | symbol).\n"
 
-        + "  -M --timestamps-template <template>      If provided, the generated timestamps will follow the precision and "
-            + "proportion of the provided template. And when the precision is up to SECOND, then precision of the fractional "
-            + "second is also conform with timestamps in template. Otherwise, timestamps will be generated randomly.\n"
+        + "  -M --timestamps-template <template>      The template consists of one or multiple timestamps which are quoted as a single string. "
+            + "The timestamps in the template might be duplicated, and the generated timestamps will follow the precision and proportion of "
+            + "timestamps with different precisions in the template. When the precision is up to SECOND, then precision of the fractional "
+            + "second will match the fractional second precision of the template timestamp. Otherwise, timestamps will be generated randomly. "
+            + "The offset of generated data will match the offset of the template timestamp, there are three types of offset "
+            + "['Z(+00:00)'| -00:00(unknown offset) | offset in a random value]\n"
 
-        + "  -N --text-code-point-range <range>      This option will specify the unicode code point range of character which "
-            + "constructs Ion string data. The valid value of this option should be positive integer and cannot out of the default "
-            + "range [0,1114111]. The unicode code point will be a random integer inside of the provided range. When the option is "
-            + "not written, this range will be set to the default value. [default: [0,1114111]]\n"
+        + "  -N --text-code-point-range <range>      This option will specify the unicode code point range of the characters in the generated strings. "
+            + "The lower bound must be at least zero and the upper bound must not exceed the maximum unicode code point (1114111). "
+            + "The string will be generated by choosing a random unicode code points that are within the given range. When the option is "
+            + "not provided, this range will be set to the default value. [default: [0,1114111]]\n"
 
-        + "  -Q --input-Ion-Schema <file_path>\n"
+        + "  -Q --input-ion-Schema <file_path>\n"
 
         + "\n";
 
@@ -332,39 +333,16 @@ public class Main {
         + "                           --api dom \\\n"
         + "                           example.10n\n\n"
 
-        + "  Generate a specific type of Ion data without any specifications, only required fields are provided. "
-            + "In this example, the size roughly equal to 500bytes, the generated data is decimal and generated file "
-            + "will be automatically saved under the current directory. The format of generated file is ion_binary.\n\n"
-
-        + "  ion-java-benchmark generate --data-size 500 \\\n"
-        + "                              --data-type decimal \\\n"
-        + "                              example.10n\n\n"
-
-        + "  Generate Ion decimal and the range of exponent is set to [-12,-10], the range of digit number of coefficient "
-            + "part is set to [1,20]. Generated file will be saved under the current directory in ion_text format.\n\n"
+        + " Generate approximately 500 bytes of text Ion decimals with exponents in the range [-12, -10] and coefficients with 1-20 digits.\n\n"
 
         + "  ion-java-benchmark generate --data-size 500 \\\n"
         + "                              --data-type decimal \\\n"
         + "                              --decimal-exponent-range '[-12,10]'\\\n"
         + "                              --decimal-coefficient-digit-range '[1,20]'\\\n"
         + "                              --format ion_text\\\n"
-        + "                              example.10n\n\n"
-
-        + "  Generate Ion string and specify the unicode code point of character inside of range [97,99], the size of "
-            + "output file is 500 byte in ion_binary format. Generated file will be saved under the current directory.\n\n"
-
-        + "  ion-java-benchmark generate --data-size 500 \\\n"
-        + "                              --data-type string \\\n"
-        + "                              --text-code-point-range '[97,99]'\\\n"
-        + "                              example.10n\n\n"
-
-        + "  Generate Ion timestamps and provide the timestamp template that generated data would follow. The size of "
-            + "output file is 500 byte in ion_binary format. Generated file will be saved under the current directory.\n\n"
-
-        + "  ion-java-benchmark generate --data-size 500 \\\n"
-        + "                              --data-type timestamp \\\n"
-        + "                              --timestamps-template '2003-12-01T, 2010-03-22T18:00:00Z, 2019-05-01T18:12:53.472-0800' \\\n"
         + "                              example.10n\n\n";
+
+
 
 
     private static void printHelpAndExit(String... messages) {
@@ -389,7 +367,7 @@ public class Main {
         }
         try {
             if (optionsMap.get("generate").equals(true)) {
-                validGeneratorOptionCombinations.checkValid(args, optionsMap);
+                GeneratorOptionsValidator.checkValid(args, optionsMap);
                 GeneratorOptions.executeGenerator(optionsMap);
             } else {
                 OptionsMatrixBase options = OptionsMatrixBase.from(optionsMap);

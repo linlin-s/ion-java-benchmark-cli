@@ -1,6 +1,8 @@
 package com.amazon.ion.benchmark;
 
 import com.amazon.ion.IonType;
+
+import java.util.List;
 import java.util.Map;
 
 public class GeneratorOptions {
@@ -13,45 +15,54 @@ public class GeneratorOptions {
         int size = Integer.parseInt(optionsMap.get("--data-size").toString());
         String expRange = optionsMap.get("--decimal-exponent-range").toString();
         String coefficientDigits = optionsMap.get("--decimal-coefficient-digit-range").toString();
-        String format = optionsMap.get("--format").toString().substring(1, optionsMap.get("--format").toString().length() - 1);
+        String format = ((List<String>) optionsMap.get("--format")).get(0);
         String path = optionsMap.get("<output_file>").toString();
         String range = optionsMap.get("--text-code-point-range").toString();
-        String type = optionsMap.get("--data-type").toString();
-        Object timestampTemplate = optionsMap.get("--timestamps-template");
-        Object inputFile = optionsMap.get("--input-Ion-Schema");
+        String timestampTemplate;
 
-        if (inputFile != null) {
-            writeDataBasedOnIonSchema.read(inputFile.toString());
+
+        if (optionsMap.get("--timestamps-template") == null) {
+            timestampTemplate = null;
+        } else {
+            timestampTemplate = optionsMap.get("--timestamps-template").toString();
         }
 
-        switch (IonType.valueOf(type.toUpperCase())) {
-            case TIMESTAMP:
-                WriteRandomIonValues.writeRandomTimestamps(size, path, timestampTemplate, format);
-                break;
-            case STRING:
-                WriteRandomIonValues.writeRandomStrings(size, path, range, format);
-                break;
-            case DECIMAL:
+        if (optionsMap.get("--input-ion-Schema") != null) {
+           String inputFilePath = optionsMap.get("--input-ion-Schema").toString();
+           WriteDataBasedOnIonSchema.readIonSchemaFile(inputFilePath,format, path);
+        }
 
-                WriteRandomIonValues.writeRandomDecimals(size, path, format, expRange, coefficientDigits);
-                break;
-            case INT:
-                WriteRandomIonValues.writeRandomInts(size, format, path);
-                break;
-            case FLOAT:
-                WriteRandomIonValues.writeRandomFloats(size, format, path);
-                break;
-            case BLOB:
-                WriteRandomIonValues.writeRandomLobs(size, type, format, path);
-                break;
-            case CLOB:
-                WriteRandomIonValues.writeRandomLobs(size, type, format, path);
-                break;
-            case SYMBOL:
-                WriteRandomIonValues.writeRandomSymbolValues(size, format, path);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + type);
+
+
+        if (optionsMap.get("--data-type") != null) {
+            IonType type = IonType.valueOf(optionsMap.get("--data-type").toString().toUpperCase());
+            switch (type) {
+                case TIMESTAMP:
+                    WriteRandomIonValues.writeRandomTimestamps(size, type, path, timestampTemplate, format);
+                    break;
+                case STRING:
+                    WriteRandomIonValues.writeRandomStrings(size, type, path, range, format);
+                    break;
+                case DECIMAL:
+
+                    WriteRandomIonValues.writeRandomDecimals(size, type, path, format, expRange, coefficientDigits);
+                    break;
+                case INT:
+                    WriteRandomIonValues.writeRandomInts(size, type, format, path);
+                    break;
+                case FLOAT:
+                    WriteRandomIonValues.writeRandomFloats(size, type, format, path);
+                    break;
+                case BLOB:
+                case CLOB:
+                    WriteRandomIonValues.writeRandomLobs(size, type, format, path);
+                    break;
+                case SYMBOL:
+                    WriteRandomIonValues.writeRandomSymbolValues(size, format, path);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + type);
+            }
         }
     }
 }
