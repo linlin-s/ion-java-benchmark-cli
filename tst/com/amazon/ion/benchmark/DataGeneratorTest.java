@@ -96,13 +96,16 @@ public class DataGeneratorTest {
      */
     @Test
     public void testGeneratedFormat() throws Exception {
-        Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "float", "-f", "ion_text", "test4.ion");
-        GeneratorOptions.executeGenerator(optionsMap);
-        String format = ((List<String>)optionsMap.get("--format")).get(0);
-        outputFile = optionsMap.get("<output_file>").toString();
-        Path path = Paths.get(outputFile);
-        byte[] buffer = Files.readAllBytes(path);
-        assertEquals(Format.valueOf(format.toUpperCase()) == Format.ION_BINARY, IonStreamUtils.isIonBinary(buffer));
+        List<String> inputs = new ArrayList<>(Arrays.asList("ion_text","ion_binary"));
+        for (int i = 0; i < 2; i++ ) {
+            Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "float", "-f", inputs.get(i), "test4.ion");
+            GeneratorOptions.executeGenerator(optionsMap);
+            String format = ((List<String>)optionsMap.get("--format")).get(0);
+            outputFile = optionsMap.get("<output_file>").toString();
+            Path path = Paths.get(outputFile);
+            byte[] buffer = Files.readAllBytes(path);
+            assertEquals(Format.valueOf(format.toUpperCase()) == Format.ION_BINARY, IonStreamUtils.isIonBinary(buffer));
+        }
     }
 
     /**
