@@ -519,9 +519,9 @@ class WriteRandomIonValues {
     }
 
     /**
-     *
-     * @param objects
-     * @throws IOException
+     * This method is used for generating requested size file by comparing the current file size and the target size.
+     * @param objects are parameters used by different Ion data generating methods.
+     * @throws IOException if an error occur when writing generated data.
      */
     public static void writeRequestedSizeFile(Object...objects) throws IOException {
         Random random = new Random();
@@ -550,10 +550,10 @@ class WriteRandomIonValues {
     /**
      * This methods will be reused by different data generator
      * @param type determines which type of data will be generated
-     * @param writer
-     * @param random
-     * @param objects
-     * @throws IOException
+     * @param writer is IonWriter.
+     * @param random is the random number generator.
+     * @param objects are parameters used by different Ion data generating methods.
+     * @throws IOException if an error occur during the data writing process.
      */
     private static void writeDataToFile(IonType type, IonWriter writer, Random random, Object... objects) throws IOException {
         switch (type) {
