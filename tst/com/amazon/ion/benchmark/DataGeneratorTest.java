@@ -16,6 +16,8 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +35,7 @@ public class DataGeneratorTest {
      * @return constructed IonReader
      * @throws Exception if errors occur during executing data generator process.
      */
-    public static IonReader constructReader(Map<String, Object> optionsMap) throws Exception {
+    public static IonReader executeAndRead(Map<String, Object> optionsMap) throws Exception {
         outputFile = optionsMap.get("<output_file>").toString();
         GeneratorOptions.executeGenerator(optionsMap);
         return IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(outputFile)));
@@ -45,8 +47,8 @@ public class DataGeneratorTest {
      */
     @Test
     public void testGeneratedType() throws Exception {
-        Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "decimal", "test1.10n");
-        try (IonReader reader = DataGeneratorTest.constructReader(optionsMap)) {
+        Map<String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "500", "--data-type", "decimal", "test1.10n");
+        try (IonReader reader = DataGeneratorTest.executeAndRead(optionsMap)) {
             while (reader.next() != null) {
                 assertSame(reader.getType(), IonType.valueOf(optionsMap.get("--data-type").toString().toUpperCase()));
             }
@@ -59,8 +61,8 @@ public class DataGeneratorTest {
      */
     @Test
     public void testGeneratedDecimalExponentRange() throws Exception {
-        Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "decimal", "-E", "[0,10]", "test2.10n");
-        try (IonReader reader = DataGeneratorTest.constructReader(optionsMap)) {
+        Map<String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "500", "--data-type", "decimal", "--decimal-exponent-range", "[0,10]", "test2.10n");
+        try (IonReader reader = DataGeneratorTest.executeAndRead(optionsMap)) {
             List<Integer> range = WriteRandomIonValues.parseRange(optionsMap.get("--decimal-exponent-range").toString());
             while (reader.next() != null) {
                 int exp = reader.decimalValue().scale();
@@ -75,8 +77,8 @@ public class DataGeneratorTest {
      */
     @Test
     public void testGeneratedDecimalCoefficientRange() throws Exception {
-        Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "decimal", "-C", "[1,12]", "test3.10n");
-        try (IonReader reader = DataGeneratorTest.constructReader(optionsMap)) {
+        Map<String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "500", "--data-type", "decimal", "--decimal-coefficient-digit-range", "[1,12]", "test3.10n");
+        try (IonReader reader = DataGeneratorTest.executeAndRead(optionsMap)) {
             List<Integer> range = WriteRandomIonValues.parseRange(optionsMap.get("--decimal-coefficient-digit-range").toString());
             while (reader.next() != null) {
                 BigInteger coefficient = reader.decimalValue().unscaledValue();
@@ -98,7 +100,7 @@ public class DataGeneratorTest {
     public void testGeneratedFormat() throws Exception {
         List<String> inputs = new ArrayList<>(Arrays.asList("ion_text","ion_binary"));
         for (int i = 0; i < 2; i++ ) {
-            Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "float", "-f", inputs.get(i), "test4.ion");
+            Map<String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "500", "--data-type", "float", "--format", inputs.get(i), "test4.ion");
             GeneratorOptions.executeGenerator(optionsMap);
             String format = ((List<String>)optionsMap.get("--format")).get(0);
             outputFile = optionsMap.get("<output_file>").toString();
@@ -114,8 +116,8 @@ public class DataGeneratorTest {
      */
     @Test
     public void testGeneratedStringUniCodeRange() throws Exception {
-        Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "string", "-N", "[96,99]","test5.10n");
-        try (IonReader reader = DataGeneratorTest.constructReader(optionsMap)) {
+        Map<String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "500", "--data-type", "string", "--text-code-point-range", "[96,99]","test5.10n");
+        try (IonReader reader = DataGeneratorTest.executeAndRead(optionsMap)) {
             List<Integer> range = WriteRandomIonValues.parseRange(optionsMap.get("--text-code-point-range").toString());
             while (reader.next() != null) {
                 String str = reader.stringValue();
@@ -138,11 +140,13 @@ public class DataGeneratorTest {
      */
     @Test
     public void testGeneratedTimestampTemplateFormat() throws Exception{
-        Map<String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-T", "timestamp", "-M", "2010T", "test6.10n");
+        Map<String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "500", "--data-type", "timestamp", "--timestamps-template", "[2021T]", "test6.10n");
         try (
-                IonReader reader = DataGeneratorTest.constructReader(optionsMap);
+                IonReader reader = DataGeneratorTest.executeAndRead(optionsMap);
                 IonReader templateReader = IonReaderBuilder.standard().build(optionsMap.get("--timestamps-template").toString())
         ) {
+            templateReader.next();
+            templateReader.stepIn();
             reader.next();
             while (reader.isNullValue()) {
                 while (templateReader.next() != null){
@@ -172,7 +176,7 @@ public class DataGeneratorTest {
      */
     @Test
     public void testSizeOfGeneratedData() throws Exception {
-        Map <String, Object> optionsMap = Main.parseArguments("generate", "-S", "5000", "-T", "timestamp", "test7.10n");
+        Map <String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "5000", "--data-type", "timestamp", "--timestamps-template","[2021T]","test7.10n");
         GeneratorOptions.executeGenerator(optionsMap);
         int expectedSize = Integer.parseInt(optionsMap.get("--data-size").toString());
         outputFile = optionsMap.get("<output_file>").toString();
@@ -190,7 +194,7 @@ public class DataGeneratorTest {
      */
     @Test
     public void testSchema() throws Exception {
-        Map <String, Object> optionsMap = Main.parseArguments("generate", "-S", "500", "-Q", "textStructs.isl", "--format", "ion_text", "test8.ion");
+        Map <String, Object> optionsMap = Main.parseArguments("generate", "--data-size", "500", "--input-ion-schema", "textStructs.isl", "--format", "ion_text", "test8.ion");
         outputFile = optionsMap.get("<output_file>").toString();
         GeneratorOptions.executeGenerator(optionsMap);
     }

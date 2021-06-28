@@ -4,6 +4,7 @@ import com.amazon.ion.IonType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +16,9 @@ import java.util.Set;
  */
 public class GeneratorOptionsValidator {
 
-    public static Set<String> invalidForTimestamp = new HashSet<>(Arrays.asList("-N", "--text-code-point-range", "-E", "--decimal-exponent-range <exp_range>", "-C", "--decimal-coefficient-digit-range"));
-    public static Set<String> invalidForString = new HashSet<>(Arrays.asList("-M", "--timestamps-template", "-E", "--decimal-exponent-range <exp_range>", "-C", "--decimal-coefficient-digit-range"));
-    public static Set<String> invalidForDecimal = new HashSet<>(Arrays.asList("-N", "--text-code-point-range", "-M", "--timestamps-template"));
+    final public static Set<String> invalidForTimestamp = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("-N", "--text-code-point-range", "-E", "--decimal-exponent-range <exp_range>", "-C", "--decimal-coefficient-digit-range")));
+    final public static Set<String> invalidForString = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("-M", "--timestamps-template", "-E", "--decimal-exponent-range <exp_range>", "-C", "--decimal-coefficient-digit-range")));
+    final public static Set<String> invalidForDecimal = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("-N", "--text-code-point-range", "-M", "--timestamps-template")));
 
     /**
      * The method combine all options which are not available for the current data type, and check

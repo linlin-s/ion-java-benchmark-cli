@@ -654,16 +654,20 @@ class WriteRandomIonValues {
         Timestamp timestamp = null;
         if (timestampTemplate != null) {
             IonReader templateReader = IonReaderBuilder.standard().build(timestampTemplate.toString());
+            if (templateReader.next() != IonType.LIST) throw new IllegalStateException("Please provide a list type");
+            templateReader.stepIn();
             while (templateReader.next() != null) {
                 Timestamp value;
                 if (templateReader.getType() == IonType.TIMESTAMP) {
                     value = templateReader.timestampValue();
                 } else {
-                    throw new IllegalStateException("Please keep the input template in a legal timestamp format, and the templates should be quoted without brackets");
+                    throw new IllegalStateException("Please provide timestamp in the template list");
                 }
                 Timestamp.Precision precision = value.getPrecision();
                 timestamp = WriteRandomIonValues.writeTimestamp(precision, value);
             }
+            templateReader.stepOut();
+            if (templateReader.next() != null) throw new IllegalStateException("Only one template list is needed");
         } else {
             Random random = new Random();
             Timestamp.Precision[] precisions = Timestamp.Precision.values();
@@ -671,7 +675,6 @@ class WriteRandomIonValues {
             timestamp = WriteRandomIonValues.writeTimestamp(precision, null);
         }
         return timestamp;
-
     }
 
     /**
