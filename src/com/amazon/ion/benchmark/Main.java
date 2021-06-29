@@ -71,7 +71,7 @@ public class Main {
             + "data that closely matches the size of data read by a single reader/loader instance in the real "
             + "world to ensure the initialization cost is properly amortized.\n"
         
-        + " generate     Generate random Ion data which can be used as input to the read/write commands. "
+        + " generate     (EXPERIMENTAL)Generate random Ion data which can be used as input to the read/write commands. "
             + "Data size, data type and the path of output file are required options. The specifications of three "
             + "scalar types can be executed so far, decimal, string and timestamp. "
             + "The command will generate approximately the amount of data requested, but the actual size of the generated "
