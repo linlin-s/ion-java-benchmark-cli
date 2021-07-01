@@ -15,6 +15,7 @@ package com.amazon.ion.benchmark;
  * permissions and limitations under the License.
  */
 
+import com.amazon.ion.IonList;
 import com.amazon.ion.IonReader;
 import com.amazon.ion.IonStruct;
 import com.amazon.ion.IonSystem;
@@ -37,7 +38,6 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -84,7 +84,7 @@ class WriteRandomIonValues {
         List<Integer> result = new ArrayList<>();
         while (reader.next() != null) {
             if (reader.getType() != IonType.INT) throw new IllegalStateException("Please put integer elements inside of the list");
-            int value = reader.intValue();
+            Integer value = reader.intValue();
             result.add(value);
         }
         reader.stepOut();
@@ -117,14 +117,14 @@ class WriteRandomIonValues {
      * @param format the format of output file (ion_binary | ion_text).
      * @throws Exception if an error occurs when building up the writer.
      */
-    public static void writeRandomStrings(int size, IonType type, String path, String codePointRange, String format) throws Exception {
+    public static void writeRandomStrings(int size, IonType type, String path, String codePointRange, String format, int codePointBoundary) throws Exception {
         File file = new File(path);
         try (IonWriter writer = WriteRandomIonValues.formatWriter(format, file)) {
             List<Integer> pointRange = WriteRandomIonValues.parseRange(codePointRange);
 
             if (pointRange.get(0) < 0) throw new IllegalStateException("Please provide the valid range inside of [0, 1114111]");
             if (pointRange.get(1) > Character.MAX_CODE_POINT) throw new IllegalStateException("Please provide the valid range inside of [0, 1114111]");
-            WriteRandomIonValues.writeRequestedSizeFile(size, writer, file, type, pointRange);
+            WriteRandomIonValues.writeRequestedSizeFile(size, writer, file, type, pointRange, codePointBoundary);
         }
         WriteRandomIonValues.printInfo(path);
     }
@@ -420,27 +420,10 @@ class WriteRandomIonValues {
                 }
                 for (int j = 0; j < numberOfAnnotations; j++) {
                     writer.addTypeAnnotation(annotations.get(random.nextInt(500)));
-
                 }
                 writer.writeFloat(Double.longBitsToDouble(random.nextLong()));
-
             }
         }
-        System.out.println("Finished writing floats. Verifying.");
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(file)))) {
-            int i = 0;
-            while (reader.next() != null) {
-                if (reader.getType() != IonType.FLOAT) {
-                    throw new IllegalStateException("Found non-float");
-                }
-                double value = reader.doubleValue();
-                if (i++ < 100) {
-                    System.out.print(Arrays.toString(reader.getTypeAnnotations()) + " ");
-                    System.out.println(value);
-                }
-            }
-        }
-        System.out.println("Done. Size: " + file.length());
     }
 
     /**
@@ -472,48 +455,6 @@ class WriteRandomIonValues {
             for (int i = 0; i < size / 2; i++) {
                 writer.writeSymbol(symbols.get(random.nextInt(500)));
             }
-        }
-        WriteRandomIonValues.printInfo(path);
-    }
-
-
-    /**
-     * This method is not available now
-     */
-    public static void writeRandomStructValues(String format, String path, IonStruct fields) throws Exception {
-        File file = new File(path);
-        try (
-            IonWriter writer = WriteRandomIonValues.formatWriter(format, file);
-            IonReader reader = IonReaderBuilder.standard().build(fields)
-        ) {
-            IonSystem system = IonSystemBuilder.standard().build();
-            reader.next();
-            reader.stepIn();
-            writer.stepIn(IonType.STRUCT);
-            while (reader.next() != null) {
-                writer.setFieldName(reader.getFieldName());
-                IonValue value1 = system.newValue(reader);
-                IonStruct value =  (IonStruct) value1;
-
-                System.out.println(value.get("type"));
-                IonType type = IonType.valueOf(value.get("type").toString().toUpperCase());
-                switch (type) {
-                    case STRING:
-                        List range = new ArrayList();
-                        range.add(96);
-                        range.add(99);
-                        String stringValue = WriteRandomIonValues.constructString(range);
-                        writer.writeString(stringValue);
-                        break;
-                    case TIMESTAMP:
-                        Timestamp timestampValue = WriteRandomIonValues.constructTimestamp(null);
-                        writer.writeTimestamp(timestampValue);
-                        break;
-                    case LIST:
-                }
-            }
-            reader.stepOut();
-            writer.stepOut();
         }
         WriteRandomIonValues.printInfo(path);
     }
@@ -562,7 +503,7 @@ class WriteRandomIonValues {
                 break;
             case STRING:
                 List<Integer> pointRange = (List<Integer>) objects[4];
-                writer.writeString(WriteRandomIonValues.constructString(pointRange));
+                writer.writeString(WriteRandomIonValues.constructString(pointRange, 20));
                 break;
             case DECIMAL:
                 List<Integer> expValRange = (List<Integer>) objects[4];
@@ -570,13 +511,18 @@ class WriteRandomIonValues {
                 writer.writeDecimal(WriteRandomIonValues.constructDecimal(expValRange, coefficientDigitRange));
                 break;
             case INT:
-                WriteRandomIonValues.constructInt(writer, random);
+                WriteRandomIonValues.constructInt(random, writer);
                 break;
             case TIMESTAMP:
                 Object timestampTemplate = objects[4];
                 Timestamp timestamp = WriteRandomIonValues.constructTimestamp(timestampTemplate);
                 writer.writeTimestamp(timestamp);
                 break;
+            case STRUCT:
+                IonStruct fields = (IonStruct) objects[4];
+                IonList annotations = (IonList) objects[5];
+                WriteRandomIonValues.constructIonStruct(fields, annotations,writer);
+
         }
     }
 
@@ -585,11 +531,10 @@ class WriteRandomIonValues {
      * @param pointRange is unicode code point range which is in a List format.
      * @return constructed string.
      */
-    public static String constructString(List<Integer> pointRange) {
+    public static String constructString(List<Integer> pointRange, int codePointsLengthBound) {
         Random random = new Random();
-        int length = random.nextInt(20);
         StringBuilder sb = new StringBuilder();
-        for (int j = 0; j < length; j++) {
+        for (int j = 0; j < codePointsLengthBound; j++) {
             int codePoint;
             int type;
             do {
@@ -622,11 +567,10 @@ class WriteRandomIonValues {
 
     /**
      * Write  random integers which composed by different length of data into the output file
-     * @param writer is the IonWriter which can write Ion data into the target file.
      * @param random is the random number generator.
      * @throws IOException if error occurs during the writing process.
      */
-    public static void constructInt(IonWriter writer, Random random) throws IOException {
+    public static void constructInt(Random random, IonWriter writer) throws IOException {
         writer.writeInt(random.nextInt(1024));
         writer.writeInt(random.nextInt());
         long longValue = random.nextLong();
@@ -697,5 +641,159 @@ class WriteRandomIonValues {
             default:
                 throw new IllegalStateException ("Please provide CLOB or BLOB");
         }
+    }
+
+    /**
+     * Write Ion structs which conform with the constraints in Ion schema.
+     * @param format is the format of the generated file, select from set (ion_text | ion_binary).
+     * @param size specifies the size in bytes of the generated file.
+     * @param path the destination of the generated file.
+     * @param fields is an Ion struct which contains the constraints needed during data generating process.
+     * @throws Exception if errors occur when writing data.
+     */
+    public static void writeRandomStructValues(int size, String format, String path, IonStruct fields, IonList annotations) throws Exception {
+        File file = new File(path);
+        try (IonWriter writer = WriteRandomIonValues.formatWriter(format, file)) {
+            WriteRandomIonValues.writeRequestedSizeFile(size, writer, file, IonType.STRUCT,fields, annotations);
+            WriteRandomIonValues.printInfo(path);
+        }
+    }
+
+    /**
+     * Construct Ion structs based on the provided constraints.
+     * @param fields is an Ion struct which contains the constraints needed during the data generating process.
+     * @param annotations is an Ion list which contains the required annotations.
+     * @param writer writes Ion struct data.
+     * @throws IOException if errors occur when writing data.
+     */
+    public static void constructIonStruct(IonStruct fields, IonList annotations, IonWriter writer) throws IOException {
+        Random random = new Random();
+        try (IonReader reader = IonReaderBuilder.standard().build(fields)) {
+            reader.next();
+            reader.stepIn();
+            int index = random.nextInt(annotations.size());
+            writer.addTypeAnnotation(String.valueOf(annotations.get(index)));
+            writer.stepIn(IonType.STRUCT);
+            while (reader.next() != null) {
+                IonSystem system = IonSystemBuilder.standard().build();
+                String fieldName = reader.getFieldName();
+                IonValue struct = system.newValue(reader);
+                IonStruct value = (IonStruct) struct;
+
+                // if the value of "occurs" is optional, the integer represents this value is 1 or 0.
+                int occurTime = WriteRandomIonValues.parseConstraints(value, "occurs");
+                if (occurTime == 0) {
+                    continue;
+                }
+                writer.setFieldName(fieldName);
+                IonType type = null;
+                type = IonType.valueOf(value.get("type").toString().toUpperCase());
+                switch (type) {
+                    // if more types of Ion data are available, the logic should be added below.
+                    case STRING:
+                        String codepointRange = "[0, 1114111]";
+                        List<Integer> range = parseRange(codepointRange);
+                        int codePointsLengthBound = 20;
+                        if (value.get("codepoint_length") != null) {
+                            codePointsLengthBound = WriteRandomIonValues.parseConstraints(value, "codepoint_length");
+                        }
+                        String stringValue = WriteRandomIonValues.constructString(range, codePointsLengthBound);
+                        writer.writeString(stringValue);
+                        break;
+                    case TIMESTAMP:
+                        // call the function that extract the precision of the timestamp
+                        Timestamp.Precision[] precisions = Timestamp.Precision.values();
+                        Timestamp.Precision precision = precisions[random.nextInt(precisions.length)];
+                        if (value.get("timestamp_precision") != null) {
+                            precision = WriteRandomIonValues.getTimestampPrecisionTemplate(value);
+                        }
+                        Timestamp timestampValue = WriteRandomIonValues.writeTimestamp(precision, null);
+                        writer.writeTimestamp(timestampValue);
+                        break;
+                }
+            }
+            writer.stepOut();
+        }
+    }
+
+    /**
+     * Extract the value of the constraints, select from the set (occurs | container_length | codepoint_length).
+     * @param value is the Ion struct which contain the current constraint field
+     * @param keyWord is the field name of the constraint
+     * @return the value of the current constraint.
+     * @throws IOException if an error occur when constructing the IonReader.
+     */
+    public static int parseConstraints(IonStruct value, String keyWord) throws IOException {
+        Random random = new Random();
+        int result = 0;
+        try (IonReader reader = IonReaderBuilder.standard().build(value)) {
+            reader.next();
+            reader.stepIn();
+            while (reader.next() != null) {
+                if (reader.getFieldName().equals(keyWord)) {
+                    IonType type = reader.getType();
+                    switch (type) {
+                        case INT:
+                            result = reader.intValue();
+                            break;
+                        case SYMBOL:
+                            if (reader.stringValue().equals("required")) {
+                                result = 1;
+                            } else {
+                                result = random.nextInt(2);
+                            }
+                            break;
+                        case LIST:
+                            reader.stepIn();
+                            reader.next();
+                            int min = reader.intValue();
+                            reader.next();
+                            int max = reader.intValue();
+                            result = random.nextInt(max - min + 1) + min;
+                            break;
+                    }
+                }
+            }
+            return result;
+        }
+    }
+
+    /**
+     * Parse the precision of the timestamp.
+     * @param value is the Ion struct which contain the current constraint field.
+     * @throws IOException if errors occur when reading the data.
+     * @return requested timestamp precision
+     */
+    public static Timestamp.Precision getTimestampPrecisionTemplate(IonStruct value) throws IOException {
+        Timestamp.Precision precision = null;
+        try (IonReader reader = IonReaderBuilder.standard().build(value)) {
+            reader.next();
+            reader.stepIn();
+            while (reader.next() != null) {
+                if (reader.getFieldName().equals("timestamp_precision")) {
+                    IonType type = reader.getType();
+                    switch (type) {
+                        case SYMBOL:
+                            precision = Timestamp.Precision.valueOf(reader.stringValue().toUpperCase());
+                            break;
+                    }
+                }
+            }
+        }
+        return precision;
+    }
+
+    /**
+     * Return the value of annotations, this method is available when the annotations are required, if there are more constraints relative to the annotations, more logic needed to be added here.
+     * @param value is the Ion struct which contain the current constraint field.
+     * @return an Ion List contains all annotations.
+     */
+    public static IonList getAnnotation(IonStruct value) {
+        IonList annotationList = null;
+        String annotationConstraint = value.get("Annotations").getTypeAnnotations()[0];
+        if (annotationConstraint.equals("required")) {
+            annotationList = (IonList) value.get("Annotations");
+        }
+        return annotationList;
     }
 }

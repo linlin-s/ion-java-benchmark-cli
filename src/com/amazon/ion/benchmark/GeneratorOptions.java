@@ -28,7 +28,10 @@ public class GeneratorOptions {
         } else {
             timestampTemplate = optionsMap.get("--timestamps-template").toString();
         }
-
+        if (optionsMap.get("--input-ion-schema") != null) {
+            String inputFilePath = optionsMap.get("--input-ion-schema").toString();
+            ReadGeneralConstraints.readIonSchemaAndGenerate(size, inputFilePath, format, path);
+        }
         if (optionsMap.get("--data-type") != null) {
             IonType type = IonType.valueOf(optionsMap.get("--data-type").toString().toUpperCase());
             switch (type) {
@@ -36,7 +39,7 @@ public class GeneratorOptions {
                     WriteRandomIonValues.writeRandomTimestamps(size, type, path, timestampTemplate, format);
                     break;
                 case STRING:
-                    WriteRandomIonValues.writeRandomStrings(size, type, path, range, format);
+                    WriteRandomIonValues.writeRandomStrings(size, type, path, range, format,20);
                     break;
                 case DECIMAL:
                     WriteRandomIonValues.writeRandomDecimals(size, type, path, format, expRange, coefficientDigits);
