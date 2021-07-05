@@ -10,6 +10,9 @@ import com.amazon.ion.system.IonReaderBuilder;
 import java.io.IOException;
 import java.util.Random;
 
+/**
+ * Contain the methods which process the constraints provided by the Ion Schema file and define the constants relevant to the Ion Schema file.
+ */
 public class IonSchemaUtilities {
     public static final String keyWordAnnotations = "Annotations";
     public static final String keyWordRequired = "required";
@@ -18,6 +21,7 @@ public class IonSchemaUtilities {
     public static final String keyWordType = "type";
     public static final String keyWordFields = "fields";
     public static final String keyWordCodePointLength = "codepoint_length";
+    public static final String keyWordOccurs = "occurs";
 
     /**
      * Extract the value of the constraints, select from the set (occurs | container_length | codepoint_length).

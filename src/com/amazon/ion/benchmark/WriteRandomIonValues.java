@@ -695,19 +695,19 @@ class WriteRandomIonValues {
                 IonStruct value = (IonStruct) struct;
 
                 // if the value of "occurs" is optional, the integer represents this value is 1 or 0.
-                int occurTime = IonSchemaUtilities.parseConstraints(value, "occurs");
+                int occurTime = IonSchemaUtilities.parseConstraints(value, IonSchemaUtilities.keyWordOccurs);
                 if (occurTime == 0) {
                     continue;
                 }
                 writer.setFieldName(fieldName);
                 IonType type = null;
-                type = IonType.valueOf(value.get("type").toString().toUpperCase());
+                type = IonType.valueOf(value.get(IonSchemaUtilities.keyWordType).toString().toUpperCase());
                 switch (type) {
                     // if more types of Ion data are available, the logic should be added below.
                     case STRING:
                         int codePointsLengthBound = 20;
-                        if (value.get("codepoint_length") != null) {
-                            codePointsLengthBound = IonSchemaUtilities.parseConstraints(value, "codepoint_length");
+                        if (value.get(IonSchemaUtilities.keyWordCodePointLength) != null) {
+                            codePointsLengthBound = IonSchemaUtilities.parseConstraints(value, IonSchemaUtilities.keyWordCodePointLength);
                         }
                         String stringValue = WriteRandomIonValues.constructString(defaultRange, codePointsLengthBound);
                         writer.writeString(stringValue);
@@ -715,7 +715,7 @@ class WriteRandomIonValues {
                     case TIMESTAMP:
                         // call the function that extract the precision of the timestamp
                         Timestamp.Precision precision = precisions[random.nextInt(precisions.length)];
-                        if (value.get("timestamp_precision") != null) {
+                        if (value.get(IonSchemaUtilities.keyWordTimestampPrecision) != null) {
                             precision = IonSchemaUtilities.getTimestampPrecisionTemplate(value);
                         }
                         Timestamp timestampValue = WriteRandomIonValues.writeTimestamp(precision, null);
