@@ -32,8 +32,11 @@ public class IonSchemaUtilities {
     public static final String KEYWORD_ORDERED = "ordered";
     public static final String KEYWORD_NAME = "name";
     public static final String KEYWORD_CONTAINER_LENGTH = "container_length";
+    public static final String KEYWORD_BYTE_LENGTH = "byte_length";
     public static final String KEYWORD_MIN = "min";
     public static final String KEYWORD_MAX = "max";
+    public static final String KEYWORD_SCALE = "scale";
+    public static final String KEYWORD_PRECISION = "precision";
 
     /**
      * Extract the value of the constraints, select from the set (occurs | container_length | codepoint_length).
@@ -72,6 +75,8 @@ public class IonSchemaUtilities {
                             if (reader.getType() == IonType.SYMBOL) {
                                 if (reader.symbolValue().equals(KEYWORD_MIN)) {
                                     min = 0;
+                                } else if (keyWord.equals(IonSchemaUtilities.KEYWORD_TIMESTAMP_PRECISION)) {
+                                    min = Timestamp.Precision.valueOf(reader.stringValue().toUpperCase()).ordinal();
                                 } else {
                                     throw new IllegalStateException("The lower bound symbol value is not supported in Ion Schema");
                                 }
@@ -82,6 +87,8 @@ public class IonSchemaUtilities {
                             if (reader.getType() == IonType.SYMBOL) {
                                 if (reader.symbolValue().equals(KEYWORD_MAX)) {
                                     max = Integer.MAX_VALUE;
+                                } else if (keyWord.equals(IonSchemaUtilities.KEYWORD_TIMESTAMP_PRECISION)) {
+                                    max = Timestamp.Precision.valueOf(reader.stringValue().toUpperCase()).ordinal();
                                 } else {
                                     throw new IllegalStateException("The upper bound symbol value is not supported in Ion Schema");
                                 }

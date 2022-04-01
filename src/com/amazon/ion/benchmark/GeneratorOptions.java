@@ -55,7 +55,7 @@ public class GeneratorOptions {
                     break;
                 case BLOB:
                 case CLOB:
-                    WriteRandomIonValues.writeRandomLobs(size, type, format, path);
+                    WriteRandomIonValues.writeRandomLobs(size, type, format, path, WriteRandomIonValues.NO_CONSTRAINT_STRUCT);
                     break;
                 case SYMBOL:
                     WriteRandomIonValues.writeRandomSymbolValues(size, format, path);
