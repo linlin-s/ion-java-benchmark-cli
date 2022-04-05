@@ -707,7 +707,7 @@ class WriteRandomIonValues {
      * @throws IOException if an error occurs during the writing process
      */
     public static void constructLobs(Random random, IonType type, IonWriter writer, int byte_length) throws IOException {
-        byte[] randomBytes = new byte[random.nextInt(512)];
+        byte[] randomBytes = new byte[byte_length];
         random.nextBytes(randomBytes);
         switch (type) {
             case CLOB:
