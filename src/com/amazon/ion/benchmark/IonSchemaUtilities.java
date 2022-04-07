@@ -39,7 +39,7 @@ public class IonSchemaUtilities {
     public static final String KEYWORD_PRECISION = "precision";
 
     /**
-     * Extract the value of the constraints, select from the set (occurs | container_length | codepoint_length).
+     * Extract the value of the constraints, select from the set (occurs | container_length | codepoint_length | timestamp_precision | precision | scale | byte_length).
      * @param value is the Ion struct which contain the current constraint field
      * @param keyWord is the field name of the constraint
      * @return the value of the current constraint.

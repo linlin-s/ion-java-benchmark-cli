@@ -45,6 +45,7 @@ import java.util.Random;
  * Generate specific scalar type of Ion data randomly, for some specific type, e.g. String, Decimal, Timestamp, users can put specifications on these types of Ion data.
  */
 class WriteRandomIonValues {
+    // The constant defined below are used as placeholder in the method WriteRandomIonValues.writeRequestedSizeFile.
     final static private IonSystem SYSTEM = IonSystemBuilder.standard().build();
     final static private List<Integer> DEFAULT_RANGE = WriteRandomIonValues.parseRange("[0, 1114111]");
     final static private Timestamp.Precision[] PRECISIONS = Timestamp.Precision.values();
@@ -411,11 +412,12 @@ class WriteRandomIonValues {
     /**
      * Write random Ion blobs/clobs into target file, and all data conform with the specifications provided by the options, e.g. size, format, type(blob/clob) and the output file path.
      * @param size specifies the size in bytes of the generated file.
-     * @param path the destination of the generated file.
-     * @param format the format of output file (ion_binary | ion_text).
      * @param type determines which type of data will be generated [blob | clob].
+     * @param format the format of output file (ion_binary | ion_text).
+     * @param path the destination of the generated file.
+     * @param constraintStruct is an IonStruct which contains the top-level constraints in Ion Schema.
      * @throws Exception if an error occurs when building up the writer.
-    */
+     */
     public static void writeRandomLobs(int size, IonType type, String format, String path, IonStruct constraintStruct) throws Exception {
         File file = new File(path);
         Random random = new Random();
@@ -662,8 +664,9 @@ class WriteRandomIonValues {
     public static BigDecimal constructDecimalFromSchema(int precision, int scale) {
         Random random = new Random();
         StringBuilder rs = new StringBuilder();
-        for (int digit = 0; digit < precision; digit++) {
-            rs.append(random.nextInt(9) + 1);
+        rs.append(random.nextInt(9) + 1);
+        for (int digit = 1; digit < precision; digit++) {
+            rs.append(random.nextInt(10));
         }
         BigInteger unscaledValue = new BigInteger(rs.toString());
         BigDecimal bigDecimal = new BigDecimal(unscaledValue, scale);

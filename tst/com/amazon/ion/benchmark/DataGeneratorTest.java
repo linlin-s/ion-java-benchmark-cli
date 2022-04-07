@@ -55,6 +55,7 @@ public class DataGeneratorTest {
     private final static String INPUT_ION_DECIMAL_FILE_PATH = "./tst/com/amazon/ion/benchmark/testDecimal.isl";
     private final static String INPUT_ION_TIMESTAMP_FILE_PATH = "./tst/com/amazon/ion/benchmark/testTimestamp.isl";
     private final static String INPUT_ION_CLOB_FILE_PATH = "./tst/com/amazon/ion/benchmark/testClob.isl";
+    private final static String INPUT_ION_BLOB_FILE_PATH = "./tst/com/amazon/ion/benchmark/testBlob.isl";
     private final static String SCORE_DIFFERENCE = "scoreDifference";
     private final static String COMPARISON_REPORT_WITHOUT_REGRESSION = "./tst/com/amazon/ion/benchmark/testComparisonReportWithoutRegression.ion";
     private final static String COMPARISON_REPORT = "./tst/com/amazon/ion/benchmark/testComparisonReport.ion";
@@ -293,7 +294,7 @@ public class DataGeneratorTest {
 
     /**
      * Test if there's violation when generating Ion Timestamp based on Ion Schema.
-     * @throws Exception  if error occurs during the violation detecting process.
+     * @throws Exception if error occurs during the violation detecting process.
      */
     @Test
     public void testViolationOfTimestamp() throws Exception {
@@ -316,6 +317,15 @@ public class DataGeneratorTest {
     @Test
     public void testViolationOfIonClob() throws Exception {
         DataGeneratorTest.violationDetect(INPUT_ION_CLOB_FILE_PATH);
+    }
+
+    /**
+     * Test if there's violation when generating blobs based on Ion Schema.
+     * @throws Exception if error occurs during the violation detecting process.
+     */
+    @Test
+    public void testViolationOfIonBlob() throws Exception {
+        DataGeneratorTest.violationDetect(INPUT_ION_BLOB_FILE_PATH);
     }
 
     /**
