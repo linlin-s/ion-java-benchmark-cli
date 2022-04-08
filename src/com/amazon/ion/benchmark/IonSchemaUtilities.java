@@ -34,6 +34,7 @@ public class IonSchemaUtilities {
     public static final String KEYWORD_CODE_POINT_LENGTH = "codepoint_length";
     public static final String KEYWORD_OCCURS = "occurs";
     public static final String KEYWORD_ELEMENT = "element";
+    public static final String KEYWORD_REGEX = "regex";
     public static final String KEYWORD_ORDERED_ELEMENTS = "ordered_elements";
     public static final String KEYWORD_ORDERED = "ordered";
     public static final String KEYWORD_NAME = "name";
@@ -149,6 +150,27 @@ public class IonSchemaUtilities {
         }
         return precision;
     }
+
+    public static String parseRegexPattern(IonStruct constraintStruct) throws Exception {
+        String regexPattern = null;
+        try (IonReader reader = IonReaderBuilder.standard().build(constraintStruct)) {
+            reader.next();
+            reader.stepIn();
+            while (reader.next() != null) {
+                if (reader.getFieldName().equals(KEYWORD_REGEX)) {
+                    IonType type = reader.getType();
+                    switch (type) {
+                        case STRING:
+                            regexPattern = reader.stringValue();
+                            break;
+                    }
+                }
+            }
+        }
+        return regexPattern;
+    }
+
+
 
     /**
      * Parse the field 'annotations' based on the provided constraints (required|ordered).
