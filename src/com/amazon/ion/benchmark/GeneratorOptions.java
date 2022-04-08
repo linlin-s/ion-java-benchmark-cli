@@ -32,6 +32,7 @@ public class GeneratorOptions {
         }
         if (optionsMap.get("--input-ion-schema") != null) {
             String inputFilePath = optionsMap.get("--input-ion-schema").toString();
+            IonSchemaUtilities.checkValidationOfSchema(inputFilePath);
             ReadGeneralConstraints.readIonSchemaAndGenerate(size, inputFilePath, format, path);
         } else if (optionsMap.get("--data-type") != null) {
             IonType type = IonType.valueOf(optionsMap.get("--data-type").toString().toUpperCase());

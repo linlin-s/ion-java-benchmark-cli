@@ -1,5 +1,6 @@
 package com.amazon.ion.benchmark;
 
+import com.amazon.ion.IonDatagram;
 import com.amazon.ion.IonList;
 import com.amazon.ion.IonReader;
 import com.amazon.ion.IonStruct;
@@ -7,7 +8,12 @@ import com.amazon.ion.IonType;
 import com.amazon.ion.IonValue;
 import com.amazon.ion.Timestamp;
 import com.amazon.ion.system.IonReaderBuilder;
+import com.amazon.ionschema.InvalidSchemaException;
+import com.amazon.ionschema.IonSchemaSystem;
+import com.amazon.ionschema.IonSchemaSystemBuilder;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,6 +43,21 @@ public class IonSchemaUtilities {
     public static final String KEYWORD_MAX = "max";
     public static final String KEYWORD_SCALE = "scale";
     public static final String KEYWORD_PRECISION = "precision";
+
+    /**
+     * Check the validation of input ion schema file and will throw InvalidSchemaException message when an invalid schema definition is encountered.
+     * @param inputFile represents the file path of the ion schema file.
+     * @throws Exception if an error occur when creating FileInputStream.
+     */
+    public static void checkValidationOfSchema(String inputFile) throws Exception {
+        IonSchemaSystem ISS = IonSchemaSystemBuilder.standard().build();
+        try (IonReader readerInput = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(inputFile)))) {
+            IonDatagram schema = ReadGeneralConstraints.LOADER.load(readerInput);
+            ISS.newSchema(schema.iterator());
+        } catch (InvalidSchemaException e) {
+            System.out.println(e.getMessage());
+        } throw new Exception("The provided ion schema file is not valid");
+    }
 
     /**
      * Extract the value of the constraints, select from the set (occurs | container_length | codepoint_length | timestamp_precision | precision | scale | byte_length).
