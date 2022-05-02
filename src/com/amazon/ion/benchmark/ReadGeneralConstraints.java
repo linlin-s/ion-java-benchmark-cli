@@ -10,6 +10,7 @@ import com.amazon.ion.IonValue;
 import com.amazon.ion.IonWriter;
 import com.amazon.ion.system.IonReaderBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
+import com.amazon.ionschema.Schema;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -30,23 +31,21 @@ public class ReadGeneralConstraints {
      * @param outputFile is the path of the generated file.
      * @throws Exception if errors occur when reading and writing data.
      */
-    public static void readIonSchemaAndGenerate(int size, String path, String format, String outputFile) throws Exception {
-        try (IonReader reader = IonReaderBuilder.standard().build(new BufferedInputStream(new FileInputStream(path)))) {
-            IonDatagram schema = LOADER.load(reader);
-            for (int i = 0; i < schema.size(); i++) {
-                IonValue schemaValue = schema.get(i);
-                // Assume there's only one constraint between schema_header and schema_footer, if more constraints added, here is the point where developers should start.
-                if (schemaValue.getType().equals(IonType.STRUCT) && schemaValue.getTypeAnnotations()[0].equals(IonSchemaUtilities.KEYWORD_TYPE)) {
-                    IonStruct constraintStruct = (IonStruct) schemaValue;
-                    //Construct the writer and pass the constraints to the following writing data to files process.
-                    File file = new File(outputFile);
-                    try (IonWriter writer = WriteRandomIonValues.formatWriter(format, file)) {
-                        WriteRandomIonValues.writeRequestedSizeFile(size, writer, file, constraintStruct);
-                    }
-                    // Print the successfully generated data notification which includes the file path information.
-                    WriteRandomIonValues.printInfo(outputFile);
+    public static void readIonSchemaAndGenerate(int size, Schema schema, String format, String outputFile) throws Exception {
+        for (int i = 0; i < schema.size(); i++) {
+            IonValue schemaValue = schema.get(i);
+            // Assume there's only one constraint between schema_header and schema_footer, if more constraints added, here is the point where developers should start.
+            if (schemaValue.getType().equals(IonType.STRUCT) && schemaValue.getTypeAnnotations()[0].equals(IonSchemaUtilities.KEYWORD_TYPE)) {
+                IonStruct constraintStruct = (IonStruct) schemaValue;
+                //Construct the writer and pass the constraints to the following writing data to files process.
+                File file = new File(outputFile);
+                try (IonWriter writer = WriteRandomIonValues.formatWriter(format, file)) {
+                    WriteRandomIonValues.writeRequestedSizeFile(size, writer, file, constraintStruct);
                 }
+                // Print the successfully generated data notification which includes the file path information.
+                WriteRandomIonValues.printInfo(outputFile);
             }
         }
     }
+
 }

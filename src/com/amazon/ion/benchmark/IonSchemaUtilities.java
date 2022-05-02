@@ -11,10 +11,7 @@ import com.amazon.ion.IonValue;
 import com.amazon.ion.Timestamp;
 import com.amazon.ion.system.IonReaderBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
-import com.amazon.ionschema.AuthorityFilesystem;
-import com.amazon.ionschema.InvalidSchemaException;
-import com.amazon.ionschema.IonSchemaSystem;
-import com.amazon.ionschema.IonSchemaSystemBuilder;
+import com.amazon.ionschema.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -56,11 +53,11 @@ public class IonSchemaUtilities {
      * @param inputFile represents the file path of the ion schema file.
      * @throws Exception if an error occur when creating FileInputStream.
      */
-    public static void checkValidationOfSchema(String inputFile) throws Exception {
+    public static Schema checkValidationOfSchema(String inputFile) throws Exception {
         IonSchemaSystem ISS = buildIonSchemaSystem(inputFile);
         String schemaID = inputFile.substring(inputFile.lastIndexOf('/') + 1);
         try {
-            ISS.loadSchema(schemaID);
+            return ISS.loadSchema(schemaID);
         } catch (InvalidSchemaException e) {
             System.out.println(e.getMessage());
             throw new Exception("The provided ion schema file is not valid");

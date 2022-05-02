@@ -1,6 +1,8 @@
 package com.amazon.ion.benchmark;
 
 
+import com.amazon.ionschema.Schema;
+
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +22,7 @@ public class GeneratorOptions {
         String path = optionsMap.get("<output_file>").toString();
         String inputFilePath = optionsMap.get("--input-ion-schema").toString();
         // Check whether the input schema file is valid.
-        IonSchemaUtilities.checkValidationOfSchema(inputFilePath);
-        ReadGeneralConstraints.readIonSchemaAndGenerate(size, inputFilePath, format, path);
+        Schema schema = IonSchemaUtilities.checkValidationOfSchema(inputFilePath);
+        ReadGeneralConstraints.readIonSchemaAndGenerate(size, schema, format, path);
     }
 }
