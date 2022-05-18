@@ -56,6 +56,10 @@ class WriteRandomIonValues {
     final static private int DEFAULT_PRECISION = 20;
     final static private int DEFAULT_SCALE_LOWER_BOUND = -20;
     final static private int DEFAULT_SCALE_UPPER_BOUND = 20;
+    // 0001-01-01T00:00:00.0Z in millis.
+    final static private BigDecimal MINIMUM_TIMESTAMP_IN_MILLIS_DECIMAL = new BigDecimal(-62135769600000L);
+    // 10000T in millis, upper bound exclusive.
+    final static private BigDecimal MAXIMUM_TIMESTAMP_IN_MILLIS_DECIMAL = new BigDecimal(253402300800000L);
 
     /**
      * Build up the writer based on the provided format (ion_text|ion_binary)
@@ -485,42 +489,51 @@ class WriteRandomIonValues {
     public static Timestamp constructTimestamp(IonStruct constraintStruct) throws Exception {
         Timestamp timestamp;
         Random random = new Random();
-        int randomIndex = IonSchemaUtilities.parseConstraints(constraintStruct, IonSchemaUtilities.KEYWORD_TIMESTAMP_PRECISION);
-        Timestamp.Precision precision = PRECISIONS[randomIndex];
+        BigDecimal lowerBoundMillis = MINIMUM_TIMESTAMP_IN_MILLIS_DECIMAL;
+        BigDecimal upperBoundMillis = MAXIMUM_TIMESTAMP_IN_MILLIS_DECIMAL;
+        // Get a random index of Timestamp.Precision if the constraint 'timestamp_precision' provided.
+        Integer randomIndex = IonSchemaUtilities.parseConstraints(constraintStruct, IonSchemaUtilities.KEYWORD_TIMESTAMP_PRECISION);
+        Timestamp.Precision precision = randomIndex == null ? PRECISIONS[random.nextInt(PRECISIONS.length)] : PRECISIONS[randomIndex];
+        // Preset the local offset.
+        Integer localOffset = localOffset(random);
+        // Get the range of 'valid_values'. If 'valid_values: range::[lowerbound, upperbound]' exists, the generated data will be conformed with the range.
+        IonList range = IonSchemaUtilities.getConstraintValueAsRange(constraintStruct, IonSchemaUtilities.KEYWORD_VALID_VALUES);
+        if(range != null) {
+            // TODO: 'min' and 'max' representations in 'valid_values' range will be handled in the next refactoring version.
+            // Convert the upper bound and lower bound values of 'valid_values:range::[lowerbound, upperbound]' range into millisecond format.
+            Timestamp lowerBound = Timestamp.valueOf(range.get(0).toString());
+            Timestamp upperBound = Timestamp.valueOf(range.get(1).toString());
+            lowerBoundMillis = lowerBound.getDecimalMillis();
+            upperBoundMillis = upperBound.getDecimalMillis();
+            // If the 'valid_values' range provided, the precision will be assigned with the precision of upper bound value to avoid generating timestamp out of bound.
+            precision = upperBound.getPrecision();
+            // When 'valid_values:range::[lowerbound, upperbound] provided, the localOffset will be conformed with the upperbound value of the range.'
+            localOffset = upperBound.getLocalOffset();
+        }
+        // Generate a random millisecond within the provided range.
+        BigDecimal randomMillis = lowerBoundMillis.add(new BigDecimal(random.nextDouble()).multiply(upperBoundMillis.subtract(lowerBoundMillis)));
+        // Generate timestamp based on the provided millisecond value and precision.
+        Timestamp regeneratedTimestamp = Timestamp.forMillis(randomMillis, localOffset);
+        int year = regeneratedTimestamp.getYear();
+        int month = regeneratedTimestamp.getMonth();
+        int day = regeneratedTimestamp.getDay();
+        int hour = regeneratedTimestamp.getHour();
+        int minute = regeneratedTimestamp.getMinute();
         switch (precision) {
             case YEAR:
-                timestamp = Timestamp.forYear(random.nextInt(9998) + 1);
+                timestamp = Timestamp.forYear(year);
                 break;
             case MONTH:
-                timestamp = Timestamp.forMonth(random.nextInt(9998) + 1, random.nextInt(12) + 1);
+                timestamp = Timestamp.forMonth(year, month);
                 break;
             case DAY:
-                timestamp = Timestamp.forDay(
-                        random.nextInt(9998) + 1,
-                        random.nextInt(12) + 1,
-                        random.nextInt(28) + 1 // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
-                );
+                timestamp = Timestamp.forDay(year, month, day);
                 break;
             case MINUTE:
-                timestamp = Timestamp.forMinute(
-                        random.nextInt(9998) + 1,
-                        random.nextInt(12) + 1,
-                        random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
-                        random.nextInt(24),
-                        random.nextInt(60),
-                        localOffset(random)
-                );
+                timestamp = Timestamp.forMinute(year, month, day, hour, minute, localOffset);
                 break;
             case SECOND:
-                timestamp = Timestamp.forSecond(
-                        random.nextInt(9998) + 1,
-                        random.nextInt(12) + 1,
-                        random.nextInt(28) + 1, // Use max 28 for simplicity. Not including up to 31 is not going to affect the measurement.
-                        random.nextInt(24),
-                        random.nextInt(60),
-                        random.nextInt(60),
-                        localOffset(random)
-                );
+                timestamp = Timestamp.forMillis(randomMillis, localOffset);
                 break;
             case FRACTION:
                 int scale = random.nextInt(20);
@@ -531,7 +544,7 @@ class WriteRandomIonValues {
                         random.nextInt(24),
                         random.nextInt(60),
                         randomSecondWithFraction(random,scale),
-                        localOffset(random)
+                        localOffset
                 );
                 break;
             default:

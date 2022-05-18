@@ -53,6 +53,7 @@ public class DataGeneratorTest {
     private final static String INPUT_ION_SYMBOL_FILE_PATH = "./tst/com/amazon/ion/benchmark/testSymbol.isl";
     private final static String INPUT_ION_STRING_FILE_PATH = "./tst/com/amazon/ion/benchmark/testString.isl";
     private final static String INPUT_ION_INT_FILE_PATH = "./tst/com/amazon/ion/benchmark/testInt.isl";
+    private final static String INPUT_ION_TIMESTAMP_VALID_VALUE_FILE_PATH = "./tst/com/amazon/ion/benchmark/testTimestampWithValidValuesContraint.isl";
     private final static String SCORE_DIFFERENCE = "scoreDifference";
     private final static String COMPARISON_REPORT_WITHOUT_REGRESSION = "./tst/com/amazon/ion/benchmark/testComparisonReportWithoutRegression.ion";
     private final static String COMPARISON_REPORT = "./tst/com/amazon/ion/benchmark/testComparisonReport.ion";
@@ -187,6 +188,15 @@ public class DataGeneratorTest {
     @Test
     public void testViolationOfTimestamp() throws Exception {
         DataGeneratorTest.violationDetect(INPUT_ION_TIMESTAMP_FILE_PATH);
+    }
+
+    /**
+     * Test if there's violation when generating Ion Timestamp based on Ion Schema which contains 'valid_values' constraint.
+     * @throws Exception if error occurs during the violation detecting process.
+     */
+    @Test
+    public void testViolationOfTimestampWithValidValues() throws Exception {
+        DataGeneratorTest.violationDetect(INPUT_ION_TIMESTAMP_VALID_VALUE_FILE_PATH);
     }
 
     /**
