@@ -48,6 +48,8 @@ public class Main {
 
         + "  ion-java-benchmark compare (--benchmark-result-previous <file_path>) (--benchmark-result-new <file_path>) <output_file>\n"
 
+        + "  ion-java-benchmark visualize (--reportPath <file_path>) (--keyword <key_word>)\n"
+
         + "  ion-java-benchmark run-suite (--test-ion-data <file_path>) (--benchmark-options-combinations <file_path>) <output_file>\n"
 
         + "  ion-java-benchmark --help\n"
@@ -286,9 +288,13 @@ public class Main {
 
         + "  -G --test-ion-data <file_path>      This option will specify the path of the directory which contains all test Ion data.\n"
 
-        + "  -B --benchmark-options-combinations <file_path>      This option will specify the path of an Ion text file which contains all options combinations of ion-java-benchmark-cli."
+        + "  -B --benchmark-options-combinations <file_path>      This option will specify the path of an Ion text file which contains all options combinations of ion-java-benchmark-cli.\n"
 
-        + "\n";
+        // 'visualize' options
+
+        + "  -M --reportPath <file_path>      This option will specify the path of the directory which contains ion-java comparison report.\n"
+
+        + "  -N --keyword <key_word>      This option will specify the keyword of target information.\n";
 
     private static final String EXAMPLES =
         "Examples:\n\n"
@@ -406,7 +412,10 @@ public class Main {
                 ParseAndCompareBenchmarkResults.compareResult(optionsMap);
             } else if (optionsMap.get("run-suite").equals(true)) {
                 GenerateAndOrganizeBenchmarkResults.generateAndSaveBenchmarkResults(optionsMap);
-            } else {
+            } else if (optionsMap.get("visualize").equals(true)) {
+                ParseAndCompareBenchmarkResults.parseReport(optionsMap);
+            }
+            else {
                 OptionsMatrixBase options = OptionsMatrixBase.from(optionsMap);
                 options.executeBenchmark();
             }
