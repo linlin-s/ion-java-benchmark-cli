@@ -15,37 +15,15 @@ package com.amazon.ion.benchmark;
  * permissions and limitations under the License.
  */
 
-import com.amazon.ion.IonList;
-import com.amazon.ion.IonReader;
-import com.amazon.ion.IonStruct;
-import com.amazon.ion.IonSystem;
-import com.amazon.ion.IonTimestamp;
-import com.amazon.ion.IonType;
-import com.amazon.ion.IonValue;
-import com.amazon.ion.IonWriter;
-import com.amazon.ion.Timestamp;
+import com.amazon.ion.*;
 import com.amazon.ion.benchmark.schema.ReparsedType;
-import com.amazon.ion.benchmark.schema.constraints.ByteLength;
-import com.amazon.ion.benchmark.schema.constraints.CodepointLength;
-import com.amazon.ion.benchmark.schema.constraints.Precision;
-import com.amazon.ion.benchmark.schema.constraints.Range;
-import com.amazon.ion.benchmark.schema.constraints.Regex;
-import com.amazon.ion.benchmark.schema.constraints.ReparsedConstraint;
-import com.amazon.ion.benchmark.schema.constraints.Scale;
-import com.amazon.ion.benchmark.schema.constraints.TimestampPrecision;
-import com.amazon.ion.benchmark.schema.constraints.ValidValues;
+import com.amazon.ion.benchmark.schema.constraints.*;
 import com.amazon.ion.system.IonBinaryWriterBuilder;
 import com.amazon.ion.system.IonReaderBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
 import com.github.curiousoddman.rgxgen.RgxGen;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -58,6 +36,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Generate specific scalar type of Ion data randomly, for some specific type, e.g. String, Decimal, Timestamp, users can put specifications on these types of Ion data.
@@ -227,9 +207,44 @@ class DataConstructor {
                     return SYSTEM.newBlob(constructLobs(constraintMapClone));
                 case CLOB:
                     return SYSTEM.newClob(constructLobs(constraintMapClone));
+                case STRUCT:
+                    return constructIonStruct(constraintMapClone);
+                case LIST:
+                    return constructIonList(constraintMapClone);
                 default:
                     throw new IllegalStateException(type + " is not supported.");
             }
+        }
+    }
+
+    public static IonValue constructIonList(Map<String, ReparsedConstraint> constraintMapClone) {
+
+        Contains contains = (Contains) constraintMapClone.remove("contains");
+        OrderedElements elementsConstraints = (OrderedElements) constraintMapClone.remove("ordered_elements");
+        if (!constraintMapClone.isEmpty()) {
+            throw new IllegalStateException ("Found unhandled constraints : " + constraintMapClone.values());
+        }
+
+        if (contains != null && elementsConstraints != null) {
+            throw new IllegalStateException("Can only handle one of : " + VALID_STRING_SYMBOL_CONSTRAINTS);
+        } else if (contains != null) {
+            return contains.getExpectedContainedList();
+        } else {
+            // Add steps of processing ordered_elements
+            IonList orderedElementsConstraints = elementsConstraints.getOrderedElementsConstraints();
+            // Process inlined type definition
+            IonList resultList = SYSTEM.newEmptyList();
+            for (IonValue constraint : orderedElementsConstraints) {
+                ReparsedType typeDefinition = new ReparsedType((IonStruct) constraint);
+                Occurs occurs = typeDefinition.getOccurs();
+                int occurTime = occurs == null ? 1: occurs.getOccurRange().getRandomQuantifiableValueFromRange().intValue();
+                int i = 0;
+                while (i < occurTime) {
+                    resultList.add(constructIonData(typeDefinition));
+                    i++;
+                }
+            }
+            return resultList;
         }
     }
 
@@ -454,6 +469,23 @@ class DataConstructor {
         byte[] randomBytes = new byte[byte_length];
         random.nextBytes(randomBytes);
         return randomBytes;
+    }
+
+    /**
+     *
+     * @param constraintMapClone
+     * @return
+     */
+    private static IonValue constructIonStruct(Map<String, ReparsedConstraint> constraintMapClone) {
+        Fields fields = (Fields) constraintMapClone.remove("fields");
+        Map<String, IonValue> result = new HashMap<>();
+        Map<String, ReparsedType> fieldMap = fields.getFieldMap();
+        for (String fieldName : fieldMap.keySet()) {
+            result.put(fieldName, constructIonData(fieldMap.get(fieldName)));
+        }
+        IonStruct constructedIonStruct = SYSTEM.newEmptyStruct();
+        constructedIonStruct.putAll(result);
+        return constructedIonStruct;
     }
 
     /**

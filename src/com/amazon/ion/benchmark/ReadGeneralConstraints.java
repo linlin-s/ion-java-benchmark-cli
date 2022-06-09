@@ -1,9 +1,6 @@
 package com.amazon.ion.benchmark;
 
-import com.amazon.ion.IonLoader;
-import com.amazon.ion.IonSystem;
-import com.amazon.ion.IonValue;
-import com.amazon.ion.IonWriter;
+import com.amazon.ion.*;
 import com.amazon.ion.benchmark.schema.ReparsedType;
 import com.amazon.ion.system.IonBinaryWriterBuilder;
 import com.amazon.ion.system.IonSystemBuilder;
@@ -34,7 +31,8 @@ public class ReadGeneralConstraints {
         // Assume there's only one type definition between schema_header and schema_footer.
         // If more constraints added, here is the point where developers should start.
         Type schemaType = schema.getTypes().next();
-        ReparsedType parsedTypeDefinition = new ReparsedType(schemaType);
+        IonStruct constraintStruct = (IonStruct) schemaType.getIsl();
+        ReparsedType parsedTypeDefinition = new ReparsedType(constraintStruct);
         CountingOutputStream outputStreamCounter = new CountingOutputStream(new FileOutputStream(outputFile));
         long count = 0;
         try (IonWriter writer = formatWriter(format, outputStreamCounter)) {

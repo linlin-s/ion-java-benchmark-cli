@@ -5,7 +5,7 @@ import com.amazon.ion.IonValue;
 // This class is used for processing the constraints [codepoint_length | byte_length | precision | scale | container_length].
 // These constraints have two formats of value [<INT> | <RANGE<INT>>].
 public abstract class QuantifiableConstraints implements ReparsedConstraint {
-    Range range;
+    protected static Range range;
 
     /**
      * Initializing the newly created QuantifiableConstraint object.
@@ -19,7 +19,7 @@ public abstract class QuantifiableConstraints implements ReparsedConstraint {
      * Getting the range value if the constraint value contains annotation 'range'.
      * @return object Range which represents constraint value.
      */
-    public Range getRange() {
+    public static Range getRange() {
         return range;
     }
 }

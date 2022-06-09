@@ -157,19 +157,19 @@ public class DataGeneratorTest {
      * Test if there's violation when generating Ion Struct based on Ion Schema.
      * @throws Exception if error occurs during the violation detecting process.
      */
-//    @Test
-//    public void testViolationOfIonStruct() throws Exception {
-//        DataGeneratorTest.violationDetect(INPUT_ION_STRUCT_FILE_PATH);
-//    }
+    @Test
+    public void testViolationOfIonStruct() throws Exception {
+        DataGeneratorTest.violationDetect(INPUT_ION_STRUCT_FILE_PATH);
+    }
 
     /**
      * Test if there's violation when generating Ion List based on Ion Schema.
      * @throws Exception if error occurs during the violation detecting process.
      */
-//    @Test
-//    public void testViolationOfIonList() throws Exception {
-//        DataGeneratorTest.violationDetect(INPUT_ION_LIST_FILE_PATH);
-//    }
+    @Test
+    public void testViolationOfIonList() throws Exception {
+        DataGeneratorTest.violationDetect(INPUT_ION_LIST_FILE_PATH);
+    }
 
     /**
      * Test if there's violation when generating nested Ion Struct based on Ion Schema.

@@ -4,14 +4,12 @@ import com.amazon.ion.IonStruct;
 import com.amazon.ion.IonType;
 import com.amazon.ion.IonValue;
 import com.amazon.ion.benchmark.schema.constraints.*;
-import com.amazon.ionschema.Type;
 
 import java.util.HashMap;
 import java.util.Map;
 
 // Parsing the type definition in ISL file into ReparsedType format which allows getting constraints information directly.
 public class ReparsedType {
-    public final Type type;
     private static final String KEYWORD_TIMESTAMP_PRECISION = "timestamp_precision";
     private static final String KEYWORD_TYPE = "type";
     private static final String KEYWORD_CODE_POINT_LENGTH = "codepoint_length";
@@ -22,17 +20,34 @@ public class ReparsedType {
     private static final String KEYWORD_PRECISION = "precision";
     private static final String KEYWORD_VALID_VALUES = "valid_values";
     private static final String KEYWORD_NAME = "name";
+    private static final String KEYWORD_FIELDS = "fields";
+    private static final String KEYWORD_CONTAINS = "contains";
+    private static final String KEYWORD_ORDERED_ELEMENTS = "ordered_elements";
+    private static final String KEYWORD_OCCURS = "occurs";
+
     // Using map to avoid processing the multiple repeat constraints situation.
     private final Map<String, ReparsedConstraint> constraintMap;
+    private final IonStruct constraintStruct;
+    private Occurs occurs;
+
+//    /**
+//     * Initializing the newly created ReparsedType object.
+//     * @param type represents type definition of ISL file.
+//     * @param constraintStruct
+//     */
 
     /**
-     * Initializing the newly created ReparsedType object.
-     * @param type represents type definition of ISL file.
+     *
+     * @param typeDefinition
      */
-    public ReparsedType(Type type) {
-        this.type = type;
+    public ReparsedType(IonStruct typeDefinition) {
+        this.constraintStruct = typeDefinition;
         constraintMap = new HashMap<>();
-        getIsl().forEach(this::handleField);
+        typeDefinition.forEach(this::handleField);
+    }
+
+    public Occurs getOccurs() {
+        return this.occurs;
     }
 
     /**
@@ -40,7 +55,7 @@ public class ReparsedType {
      * @return the name of type definition.
      */
     public String getName() {
-        return type.getName();
+        return constraintStruct.get(KEYWORD_NAME).toString();
     }
 
     /**
@@ -51,6 +66,7 @@ public class ReparsedType {
         switch (field.getFieldName()) {
             case KEYWORD_NAME:
             case KEYWORD_TYPE:
+            case KEYWORD_OCCURS:
                 return;
             default:
                 constraintMap.put(field.getFieldName(), toConstraint(field));
@@ -58,19 +74,11 @@ public class ReparsedType {
     }
 
     /**
-     * Redefining the getIsl method to convert type definition to IonStruct format.
-     * @return an IonStruct which contains constraints in type definition.
-     */
-    public IonStruct getIsl() {
-        return (IonStruct) type.getIsl();
-    }
-
-    /**
      * Get the value of constraint 'type' in IonType format.
      * @return the value of 'type' in IonType format.
      */
     public IonType getIonType() {
-        return IonType.valueOf(getIsl().get(KEYWORD_TYPE).toString().toUpperCase());
+        return IonType.valueOf(constraintStruct.get(KEYWORD_TYPE).toString().toUpperCase());
     }
 
     /**
@@ -82,13 +90,13 @@ public class ReparsedType {
         return constraintMap;
     }
 
-    //TODO: Constraints come in two flavors - container and scalar?
+    //TODO: Separate into two flavors - container and scalar?
     /**
      * This method helps to categorize constraints based on the data type that they represent.
      * @param field represents the field contained in type definition.
      * @return ReparsedConstraints which are processed based on the provided constraint 'type'.
      */
-    private static ReparsedConstraint toConstraint(IonValue field) {
+    private ReparsedConstraint toConstraint(IonValue field) {
         switch (field.getFieldName()) {
             //TODO: Add cases of constraints 'annotation' and 'occurs'.
             //TODO: Add container type constraints: 'element', 'ordered_element', 'fields', these might cover some of the implemented constraints.
@@ -108,6 +116,14 @@ public class ReparsedType {
                 return Regex.of(field);
             case KEYWORD_TIMESTAMP_PRECISION:
                 return TimestampPrecision.of(field);
+            case KEYWORD_FIELDS:
+                return Fields.of(field);
+            case KEYWORD_CONTAINS:
+                return Contains.of(field);
+            case KEYWORD_ORDERED_ELEMENTS:
+                return OrderedElements.of(field);
+            case KEYWORD_OCCURS:
+                this.occurs = Occurs.of(field);
             default:
                 throw new IllegalArgumentException("This field is not understood: " + field);
         }

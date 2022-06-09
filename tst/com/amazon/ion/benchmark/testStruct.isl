@@ -3,12 +3,11 @@
  type::{
       name: Customer,
       type: struct,
-      annotations:[corporate, gold_class, club_member],
       fields: {
-        firstName: { type: string, occurs: required },
-        lastName: { type: string, occurs: optional },
-        last_updated: { type: timestamp, timestamp_precision: year, occurs: required},
+        firstName: { type: string},
+        lastName: { type: string},
+        last_updated: { type: timestamp, timestamp_precision: year},
       },
  }
-  schema_footer::{
-  }
+ schema_footer::{
+ }

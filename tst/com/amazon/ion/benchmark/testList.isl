@@ -4,11 +4,8 @@
  type::{
        name: List,
               type: list,
-              ordered_elements: [
-                  string,
-                  int,
-                   { type: int, occurs: range::[0, 10] },
-                ]
+               ordered_elements: [
+             { type: int, valid_values: range::[0, 100], occurs: required }],
             }
 
   schema_footer::{
