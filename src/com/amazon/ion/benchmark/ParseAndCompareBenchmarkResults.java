@@ -234,7 +234,7 @@ public class ParseAndCompareBenchmarkResults {
             writer.stepOut();
             writer.stepOut();
         }
-        Map<String, BigDecimal> regressionResult = detectRegression(thresholdMap, scoreMap, outputFilePath);
+        Map<String, BigDecimal> regressionResult = thresholdMap;
         // This print out value will be passed to the environment variable in the GitHub Actions workflow.
         if (regressionResult.size() != 0) {
             System.out.println(String.format("%s, %s, %s", regressionResult.get(GC_ALLOCATE), regressionResult.get(HEAP_USAGE), regressionResult.get(SPEED)));
