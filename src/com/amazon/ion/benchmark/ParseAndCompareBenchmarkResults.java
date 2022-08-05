@@ -239,7 +239,7 @@ public class ParseAndCompareBenchmarkResults {
         if (regressionResult.size() != 0) {
             System.out.println(String.format("%s, %s, %s", regressionResult.get(GC_ALLOCATE), regressionResult.get(HEAP_USAGE), regressionResult.get(SPEED)));
         } else {
-            System.out.println("no regression detected");
+            System.out.println(" ");
         }
     }
 
