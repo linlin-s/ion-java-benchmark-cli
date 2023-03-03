@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite tests="60" failures="0" name="com.amazon.ion.benchmark.OptionsTest" time="0.64" errors="0" skipped="1">
+  <properties>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="java.vm.version" value="17.0.2+0"/>
+    <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/17.0.2/libexec/openjdk.jdk/Contents/Home/lib"/>
+    <property name="maven.multiModuleProjectDirectory" value="/Users/linls/desktop/cloud/ion-java-benchmark-cli"/>
+    <property name="java.vm.vendor" value="Homebrew"/>
+    <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="guice.disable.misplaced.annotation.check" value="true"/>
+    <property name="path.separator" value=":"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="/Users/linls/Desktop/cloud/ion-java-benchmark-cli"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="java.runtime.version" value="17.0.2+0"/>
+    <property name="os.arch" value="aarch64"/>
+    <property name="java.io.tmpdir" value="/var/folders/l6/6hxyqfs91hd__h8rbll51b2r0000gr/T/"/>
+    <property name="line.separator" value="
+"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="classworlds.conf" value="/opt/homebrew/Cellar/maven/3.8.4/libexec/bin/m2.conf"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/linls/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="maven.conf" value="/opt/homebrew/Cellar/maven/3.8.4/libexec/conf"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="java.class.version" value="61.0"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="os.version" value="13.2.1"/>
+    <property name="library.jansi.path" value="/opt/homebrew/Cellar/maven/3.8.4/libexec/lib/jansi-native"/>
+    <property name="user.home" value="/Users/linls"/>
+    <property name="user.timezone" value="America/Los_Angeles"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.specification.version" value="17"/>
+    <property name="user.name" value="linls"/>
+    <property name="java.class.path" value="/opt/homebrew/Cellar/maven/3.8.4/libexec/boot/plexus-classworlds-2.6.0.jar"/>
+    <property name="java.vm.specification.version" value="17"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher clean install"/>
+    <property name="java.home" value="/opt/homebrew/Cellar/openjdk/17.0.2/libexec/openjdk.jdk/Contents/Home"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="java.version" value="17.0.2"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Homebrew"/>
+    <property name="sun.stderr.encoding" value="UTF-8"/>
+    <property name="maven.home" value="/opt/homebrew/Cellar/maven/3.8.4/libexec"/>
+    <property name="file.separator" value="/"/>
+    <property name="java.version.date" value="2022-01-18"/>
+    <property name="java.vendor.url.bug" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="java.vendor.version" value="Homebrew"/>
+    <property name="sun.stdout.encoding" value="UTF-8"/>
+  </properties>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readWithVariousIoBufferSizes" time="0.126"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBothTextAndIonUsingBothDomAndReader" time="0.023"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeJsonFromIon" time="0.091"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readCborToBufferWithLimit" time="0.012"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="traverseJsonDoesNotFail" time="0.008"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeCbor" time="0.008"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeJson" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeJsonFromCbor" time="0.007"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeJsonFromDomWithLimit" time="0.005"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBinaryWithAndWithoutImports" time="0.013"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readJsonWithAndWithoutBigDecimals" time="0.007"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readCborFromIon" time="0.006"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBinaryWithLimitFromFileUsingDom" time="0.011"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readCbor" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readJson" time="0.009"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeBinaryFromDataWithImports" time="0.009"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="defaultWrite" time="0.006"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeJsonWithAndWithoutBigDecimals" time="0.006"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="textSparseReadFromBuffer" time="0.009"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readWithCustomIncrementalBufferSize" time="0.017"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="defaultRead" time="0.005"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeCborFromIon" time="0.005"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeCborFromJson" time="0.007"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeAllTypes" time="0.009"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeWithVariousBufferSizes" time="0.013"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeCborFromDomWithLimit" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeBinaryWithLimitUsingWriterAndDOM" time="0.007"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="importsForBenchmarkAuto" time="0.008"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBinaryFloatWidths" time="0.009"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeBinaryWithAndWithoutImports" time="0.01"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBinaryWithVariousFlushPeriodsAndPreallocations" time="0.022"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readCborFromDomWithoutLimit" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readAllTypes" time="0.015"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeJsonToBufferWithLimit" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readJsonFromDomWithLimit" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readJsonFromCbor" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeBinaryFromDataWithImportsWithoutProvidingCatalogRaisesError" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readUsingBigDecimals" time="0.011"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="ionWriterBlockSize" time="0.008"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeTextUsingDom" time="0.005"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeBinaryWithVariousFlushPeriodsAndPreallocations" time="0.019"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBinaryFromDataWithImportsWithoutProvidingCatalogRaisesError" time="0.005"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeBinaryFloatWidths" time="0.007"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readJsonToBufferWithLimit" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readUsingLobChunks" time="0.004">
+    <skipped/>
+  </testcase>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="profileWithMultipleCombinationsRaisesError" time="0.002"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="traverseCborDoesNotFail" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="binarySparseReadFromFile" time="0.005"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readIonFromCbor" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readIonFromJson" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="invalidFloatWidthRaisesError" time="0.002"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readCborFromJson" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readCborFromDomWithLimit" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readJsonFromDomWithoutLimit" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeCborToBufferWithLimit" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeIonFromCbor" time="0.006"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="writeIonFromJson" time="0.003"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readJsonFromIon" time="0.004"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBinaryWithLimit" time="0.01"/>
+  <testcase classname="com.amazon.ion.benchmark.OptionsTest" name="readBinaryFromDataWithImports" time="0.011"/>
+</testsuite>

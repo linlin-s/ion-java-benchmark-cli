@@ -1,0 +1,1 @@
+JMH S 30 com.amazon.ion.benchmark.Bench S 52 com.amazon.ion.benchmark.generated.Bench_run_jmhTest S 3 run S 10 Throughput E A 1 1 1 E E E E E E E E E E E E E M 2 5 input 1 0  7 options 1 2 {} E E E 

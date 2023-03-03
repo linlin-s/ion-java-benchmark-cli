@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <tstamp>
+    <format property="build.time" pattern="yyyy-MM-dd&apos;T&apos;HH:mm:ssXXX"/>
+  </tstamp>
+</target>
+</project>
